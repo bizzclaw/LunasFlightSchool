@@ -197,10 +197,14 @@ local function CalcFlight( self )
 
 				LocalAngles = Angle(X,0,0)
 			end
-
-			if Yaw_R or Yaw_L then
-				LocalAngles.y = (Yaw_R and -90 or 0) + (Yaw_L and 90 or 0)
-			end
+		end
+		
+		if Yaw_R or Yaw_L then
+			EyeAngles = self:GetAngles()
+			
+			self.StoredEyeAngles = Angle(EyeAngles.p,EyeAngles.y,0)
+			
+			LocalAngles.y = (Yaw_R and -90 or 0) + (Yaw_L and 90 or 0)
 		end
 		
 		if Yaw_R or Yaw_L then

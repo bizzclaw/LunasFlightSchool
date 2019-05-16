@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 135 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 136)
+simfphys.LFS.VERSION = 136 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 146)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -493,10 +493,13 @@ if CLIENT then
 	local cvarVolume = CreateClientConVar( "lfs_volume", 1, true, false)
 	local cvarCamFocus = CreateClientConVar( "lfs_camerafocus", 0, true, false)
 	local cvarShowPlaneIdent = CreateClientConVar( "lfs_show_identifier", 1, true, false)
+	local cvarShowRollIndic = CreateClientConVar( "lfs_show_rollindicator", 0, true, false)
 	local cvarNotificationVoice = CreateClientConVar( "lfs_notification_voice", "RANDOM", true, false)
-	local ShowPlaneIdent = cvarShowPlaneIdent and cvarShowPlaneIdent:GetBool() or true
 	local cvarUnlockControls = CreateClientConVar( "lfs_hipster", 0, true, true)
 	local cvarDisableQMENU = CreateClientConVar( "lfs_qmenudisable", 1, true, false)
+	
+	local ShowPlaneIdent = cvarShowPlaneIdent and cvarShowPlaneIdent:GetBool() or true
+	local ShowShowRollIndic = cvarShowRollIndic and cvarShowRollIndic:GetBool() or false
 	
 	function simfphys.LFS.PlayNotificationSound()
 		local soundfile = simfphys.LFS.NotificationVoices[GetConVar( "lfs_notification_voice" ):GetString()]
@@ -776,6 +779,7 @@ if CLIENT then
 			AllPlanes = simfphys.LFS:PlanesGetAll()
 		end
 		
+		--local Me = LocalPlayer()
 		local MyPos = ent:GetPos()
 		local MyTeam = ent:GetAITEAM()
 		
@@ -784,6 +788,8 @@ if CLIENT then
 				if v ~= ent then
 					if isvector( v.SeatPos ) then
 						local rPos = v:LocalToWorld( v.SeatPos )
+						
+						--if Me:IsLineOfSightClear( rPos ) then
 						local Pos = rPos:ToScreen()
 						local Size = 60
 						local Dist = (MyPos - rPos):Length()
@@ -940,6 +946,32 @@ if CLIENT then
 		surface.DrawLine( HitPlane.x + 1, HitPlane.y + 11, HitPlane.x + 1, HitPlane.y + 21 ) 
 		surface.DrawLine( HitPlane.x + 1, HitPlane.y - 19, HitPlane.x + 1, HitPlane.y - 16 ) 
 		DrawCircle( HitPilot.x + 1, HitPilot.y + 1, 34 )
+		
+		if ShowShowRollIndic then
+			surface.SetDrawColor( 255, 255, 255, 255 )
+			
+			local Roll = Parent:GetAngles().roll
+			
+			local X = math.cos( math.rad( Roll ) )
+			local Y = math.sin( math.rad( Roll ) )
+			
+			surface.DrawLine( HitPlane.x + X * 50, HitPlane.y + Y * 50, HitPlane.x + X * 125, HitPlane.y + Y * 125 ) 
+			surface.DrawLine( HitPlane.x - X * 50, HitPlane.y - Y * 50, HitPlane.x - X * 125, HitPlane.y - Y * 125 ) 
+			
+			surface.DrawLine( HitPlane.x + 125, HitPlane.y, HitPlane.x + 130, HitPlane.y + 5 ) 
+			surface.DrawLine( HitPlane.x + 125, HitPlane.y, HitPlane.x + 130, HitPlane.y - 5 ) 
+			surface.DrawLine( HitPlane.x - 125, HitPlane.y, HitPlane.x - 130, HitPlane.y + 5 ) 
+			surface.DrawLine( HitPlane.x - 125, HitPlane.y, HitPlane.x - 130, HitPlane.y - 5 ) 
+			
+			surface.SetDrawColor( 0, 0, 0, 80 )
+			surface.DrawLine( HitPlane.x + X * 50 + 1, HitPlane.y + Y * 50 + 1, HitPlane.x + X * 125 + 1, HitPlane.y + Y * 125 + 1 ) 
+			surface.DrawLine( HitPlane.x - X * 50 + 1, HitPlane.y - Y * 50 + 1, HitPlane.x - X * 125 + 1, HitPlane.y - Y * 125 + 1 ) 
+			
+			surface.DrawLine( HitPlane.x + 126, HitPlane.y + 1, HitPlane.x + 131, HitPlane.y + 6 ) 
+			surface.DrawLine( HitPlane.x + 126, HitPlane.y + 1, HitPlane.x + 131, HitPlane.y - 4 ) 
+			surface.DrawLine( HitPlane.x - 126, HitPlane.y + 1, HitPlane.x - 129, HitPlane.y + 6 ) 
+			surface.DrawLine( HitPlane.x - 126, HitPlane.y + 1, HitPlane.x - 129, HitPlane.y - 4 ) 
+		end
 	end )
 	
 	local Frame
@@ -993,6 +1025,12 @@ if CLIENT then
 			CheckBox:SetConVar("lfs_show_identifier") 
 			CheckBox:SizeToContents()
 			CheckBox:SetPos( 20, 140 )
+			
+			local CheckBox = vgui.Create( "DCheckBoxLabel", DPanel )
+			CheckBox:SetText( "Show Roll Indicator" )
+			CheckBox:SetConVar("lfs_show_rollindicator") 
+			CheckBox:SizeToContents()
+			CheckBox:SetPos( 180, 140 )
 			
 			local DComboBox = vgui.Create( "DComboBox", DPanel )
 			DComboBox:SetPos( 150, 105 )
@@ -1455,6 +1493,10 @@ if CLIENT then
 	
 	cvars.AddChangeCallback( "lfs_show_identifier", function( convar, oldValue, newValue ) 
 		ShowPlaneIdent = tonumber( newValue ) ~=0
+	end)
+	
+	cvars.AddChangeCallback( "lfs_show_rollindicator", function( convar, oldValue, newValue ) 
+		ShowShowRollIndic = tonumber( newValue ) ~=0
 	end)
 end
 

@@ -2,13 +2,21 @@
 simfphys.LFS:PlanesGetAll()  -- gets all LFS planes
 simfphys.LFS.GetVersion() -- gets the current addon version
 
+simfphys.LFS:AddKey( access_name, class, name_menu, key_enum_default, console_command, IN_KEY_ALTERNATIVE) -- register another key. 
+Example: simfphys.LFS:AddKey( "PRI_ATTACK", "misc", "Primary Attack", MOUSE_LEFT, "cl_lfs_primaryattack", IN_ATTACK)
+
 Player:lfsGetPlane()  -- returns the LFSPLANE the player is sitting in
 Player:lfsGetAITeam()  -- gets the AI-team the player is in
+Player:lfsGetInput( "PRI_ATTACK" ) -- is player pressing this key?
+
+LFSPLANE:IsHelicopter() -- is the plane a helicopter?
+LFSPLANE:IsSpaceShip() -- is the plane a spaceship? (star wars vehicle or similar)
 
 LFSPLANE:GetDriver()  -- returns the driver (entity)
 LFSPLANE:GetDriverSeat() -- returns the drivers pod (entity)
 LFSPLANE:GetGunner()  -- returns the gunner if defined (entity)
 LFSPLANE:GetGunnerSeat() -- returns the gunners pod if defined (entity)
+LFSPLANE:GetPassengerSeats() -- returns all passenger seats (table)
 LFSPLANE:GetActive() -- returns true if the vehicle is active. Active does not mean that engine is running (bool)
 LFSPLANE:GetEngineActive() -- returns true if the engine is running (bool)
 
@@ -62,6 +70,8 @@ LFSPLANE:ToggleEngine()-- toggle engine
 LFSPLANE:StartEngine() -- start engine
 LFSPLANE:StopEngine() -- stop engine
 LFSPLANE:ToggleLandingGear() -- toggle landing gear
+LFSPLANE:RaiseLandingGear() -- raise landing gear
+LFSPLANE:DeployLandingGear() -- deploy landing gear
 
 LFSPLANE:SetHP( float ) -- set the health. Can not be higher than LFSPLANE:GetMaxHP()
 LFSPLANE:SetShield( float ) -- set the shield. Can not be higher than LFSPLANE:GetMaxShield()
@@ -73,7 +83,5 @@ LFSPLANE:SetAmmoPrimary( int ) -- set primary ammo. Can not be higher than LFSPL
 LFSPLANE:SetAmmoSecondary( int ) -- set secondary ammo. Can not be higher than LFSPLANE:GetMaxAmmoSecondary()
 
 LFSPLANE:AddPassengerSeat( Pos, Ang ) -- adds an passenger seat. Pos and Ang is Local to the plane. Function returns the created Pod entity
-
-LFSPLANE:GetPassengerSeats() -- returns all passenger seats as a table
 
 LFSPLANE:IsVtolModeActive() -- returns true when in vtol mode

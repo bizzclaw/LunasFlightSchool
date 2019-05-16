@@ -48,7 +48,8 @@ local function CalcFlight( self )
 	local RollL = false
 	local RollR = false
 	
-	local HoverMode  = false
+	local HoverMode = false
+	local unlockYaw = false
 	
 	local TargetThrust = 0
 	
@@ -61,8 +62,10 @@ local function CalcFlight( self )
 			if isangle( self.StoredEyeAngles ) then
 				EyeAngles = self.StoredEyeAngles
 			end
+			unlockYaw = true
 		else
 			self.StoredEyeAngles = EyeAngles
+			unlockYaw = false
 		end
 		
 		ThrInc = Driver:lfsGetInput( "+THROTTLE_HELI" )
@@ -117,7 +120,7 @@ local function CalcFlight( self )
 	
 	if HoverMode then
 		local P = math.Clamp(-LocalVel.x * 0.1,-40,40)
-		local Y = 0
+		local Y = EyeAngles.y
 		local R = math.Clamp(LocalVel.y * 0.1,-40,40)
 		
 		if PitchUp or PitchDn then
@@ -125,14 +128,21 @@ local function CalcFlight( self )
 		end
 		
 		if YawL or YawR then
-			Y = (YawL and 45 or 0) - (YawR and 45 or 0)
+			Y = Y + (YawL and 45 or 0) - (YawR and 45 or 0)
 		end
 		
 		if RollL or RollR then
 			R = (RollR and 60 or 0) - (RollL and 60 or 0)
 		end
 		
-		AngForce = self:WorldToLocalAngles( Angle(P,EyeAngles.y + Y,R) )
+		if unlockYaw then
+			self.Yaw = self.Yaw and self.Yaw + ((YawL and MaxYaw or 0) - (YawR and MaxYaw or 0)) * FT or EyeAngles.y
+			Y = self.Yaw
+		else
+			self.Yaw = Y
+		end
+		
+		AngForce = self:WorldToLocalAngles( Angle(P,Y,R) )
 		
 		self.Roll = 0
 	end
