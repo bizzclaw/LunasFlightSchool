@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 138 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 147)
+simfphys.LFS.VERSION = 139 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 147)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -302,19 +302,21 @@ if SERVER then
 	end )
 	
 	hook.Add( "PlayerButtonDown", "!!!lfsButtonDown", function( ply, button )
+		local vehicle = ply:lfsGetPlane()
+		
 		for _, LFS_BIND in pairs( ply:lfsGetControls() ) do
 			if LFS_BIND[ button ] then
 				ply:lfsSetInput( LFS_BIND[ button ], true )
 				
-				if ply.LFS_HIPSTER then
-					if LFS_BIND[ button ] == "EXIT" then
-						ply:ExitVehicle()
+				if IsValid( vehicle ) then
+					if ply.LFS_HIPSTER then
+						if LFS_BIND[ button ] == "EXIT" then
+							ply:ExitVehicle()
+						end
 					end
 				end
 			end
 		end
-		
-		local vehicle = ply:lfsGetPlane()
 		
 		if not IsValid( vehicle ) then return end
 		
