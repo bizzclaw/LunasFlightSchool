@@ -61,6 +61,7 @@ function ENT:SetupDataTables()
 	self:NetworkVar( "Bool",0, "Active" )
 	self:NetworkVar( "Bool",1, "EngineActive" )
 	self:NetworkVar( "Bool",2, "AI",	{ KeyName = "aicontrolled",	Edit = { type = "Boolean",	order = 1,	category = "AI"} } )
+	self:NetworkVar( "Bool",3, "IsGroundTouching" )
 	self:NetworkVar( "Bool",4, "RotorDestroyed" )
 	
 	self:NetworkVar( "Int",2, "AITEAM", { KeyName = "aiteam", Edit = { type = "Int", order = 2,min = 0, max = 2, category = "AI"} } )
