@@ -1,6 +1,6 @@
 --DO NOT EDIT OR REUPLOAD THIS FILE
 
-EFFECT.Mat = Material( "effects/beam_generic01" )
+EFFECT.Mat = Material( "effects/lfs_base/ballturret_projectorbeam" )
 EFFECT.HitMat = Material( "sprites/light_glow02_add" )
 
 function EFFECT:Init( data )

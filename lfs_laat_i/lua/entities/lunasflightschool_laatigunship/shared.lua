@@ -180,3 +180,8 @@ hook.Add("CalcMainActivity", "!!!lfs_LAATi_passengeranims", function(ply)
 
 	return ply.CalcIdeal, ply.CalcSeqOverride
 end)
+
+if SERVER then
+	resource.AddSingleFile( "materials/effects/lfs_base/ballturret_projectorbeam.vmt" )
+	resource.AddSingleFile( "materials/effects/lfs_base/ballturret_projectorbeam.vtf" )
+end
