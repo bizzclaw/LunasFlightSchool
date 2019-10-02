@@ -497,12 +497,9 @@ function ENT:HandleActive()
 			self:SetGunner( Gunner )
 			
 			if IsValid( Gunner ) then
-				Gunner:CrosshairEnable() 
+				Gunner:CrosshairEnable()
+				Gunner:lfsBuildControls()
 			end
-		end
-		
-		if IsValid( Gunner ) then
-			Gunner:lfsBuildControls()
 		end
 	end
 	
@@ -713,7 +710,7 @@ function ENT:SetPassenger( ply )
 	local AI = self:GetAI()
 	local DriverSeat = self:GetDriverSeat()
 	
-	if IsValid( DriverSeat ) and not IsValid( DriverSeat:GetDriver() ) and not ply:lfsGetInput( "FREELOOK" ) and not AI then
+	if IsValid( DriverSeat ) and not IsValid( DriverSeat:GetDriver() ) and not ply:KeyDown( IN_WALK ) and not AI then
 		ply:EnterVehicle( DriverSeat )
 	else
 		local Seat = NULL
