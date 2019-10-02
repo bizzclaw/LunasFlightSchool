@@ -9,6 +9,8 @@ ENT.Category = "[LFS]"
 ENT.Spawnable		= true
 ENT.AdminSpawnable	= false
 
+ENT.UseLAATiAnimHook = true
+
 ENT.MDL = "models/blu/laat.mdl"
 
 ENT.AITEAM = 2
@@ -21,8 +23,8 @@ ENT.SeatAng = Angle(0,-90,0)
 
 ENT.MaxHealth = 6000
 
-ENT.MaxPrimaryAmmo = 1200
-ENT.MaxSecondaryAmmo = -1
+ENT.MaxPrimaryAmmo = 800
+ENT.MaxSecondaryAmmo = 8
 
 ENT.MaxTurnPitch = 80
 ENT.MaxTurnYaw = 80
@@ -73,6 +75,15 @@ sound.Add( {
 } )
 
 sound.Add( {
+	name = "LAATi_FIREMISSILE",
+	channel = CHAN_WEAPON,
+	volume = 1.0,
+	level = 125,
+	pitch = {95, 105},
+	sound = "lfs/laat/fire_missile.mp3"
+} )
+
+sound.Add( {
 	name = "LAATi_BT_FIRE",
 	channel = CHAN_WEAPON,
 	volume = 1.0,
@@ -104,3 +115,67 @@ sound.Add( {
 	level = 125,
 	sound = {"^lfs/laat/takeoff_1.wav","^lfs/laat/takeoff_2.wav"}
 } )
+
+sound.Add( {
+	name = "LAATi_BOOST",
+	channel = CHAN_STATIC,
+	volume = 1.0,
+	level = 125,
+	sound = {"^lfs/laat/boost_1.wav","^lfs/laat/boost_2.wav"}
+} )
+
+sound.Add( {
+	name = "LAATi_LANDING",
+	channel = CHAN_STATIC,
+	volume = 1.0,
+	level = 125,
+	sound = "^lfs/laat/landing.wav"
+} )
+
+sound.Add( {
+	name = "LAATi_DIST",
+	channel = CHAN_STATIC,
+	volume = 1.0,
+	level = 125,
+	sound = "^lfs/laat/dist.wav"
+} )
+
+hook.Add("CalcMainActivity", "!!!lfs_LAATi_passengeranims", function(ply)
+	local Ent = ply:lfsGetPlane()
+	
+	if not IsValid( Ent ) then return end
+	if not Ent.UseLAATiAnimHook then return end
+	
+	local Pod = ply:GetVehicle()
+	
+	if Pod == Ent:GetDriverSeat() or Pod == Ent:GetGunnerSeat() or Pod == Ent:GetBTPodL() or Pod == Ent:GetBTPodR() then return end
+	
+	if ply.m_bWasNoclipping then 
+		ply.m_bWasNoclipping = nil 
+		ply:AnimResetGestureSlot( GESTURE_SLOT_CUSTOM ) 
+		
+		if CLIENT then 
+			ply:SetIK( true )
+		end 
+	end 
+	
+	ply.CalcIdeal = ACT_STAND
+	ply.CalcSeqOverride = ply:LookupSequence( "idle_all_02" )
+
+	if ply:GetAllowWeaponsInVehicle() and IsValid( ply:GetActiveWeapon() ) then
+		
+		local holdtype = ply:GetActiveWeapon():GetHoldType()
+		
+		if holdtype == "smg" then 
+			holdtype = "smg1"
+		end
+
+		local seqid = ply:LookupSequence( "idle_" .. holdtype )
+		
+		if seqid ~= -1 then
+			ply.CalcSeqOverride = seqid
+		end
+	end
+
+	return ply.CalcIdeal, ply.CalcSeqOverride
+end)

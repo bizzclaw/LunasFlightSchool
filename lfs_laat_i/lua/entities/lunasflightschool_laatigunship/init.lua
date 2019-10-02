@@ -19,7 +19,11 @@ end
 function ENT:RunOnSpawn()
 	self:GetDriverSeat().ExitPos = Vector(75,0,36)
 	
-	self:SetGunnerSeat( self:AddPassengerSeat( Vector(111.87,0,156), Angle(0,-90,0) ) )
+	
+	local GunnerSeat = self:AddPassengerSeat( Vector(111.87,0,156), Angle(0,-90,0) )
+	GunnerSeat.ExitPos = Vector(75,0,36)
+	
+	self:SetGunnerSeat( GunnerSeat )
 	
 	do
 		local BallTurretPod = self:AddPassengerSeat( Vector(0,0,100), Angle(0,-90,0) )
@@ -53,6 +57,17 @@ function ENT:RunOnSpawn()
 			BallTurretPod:SetParent( self, ID )
 			self:SetBTPodR( BallTurretPod )
 		end
+	end
+	
+	
+	self:AddPassengerSeat( Vector(95,0,15), Angle(0,90,0) ).ExitPos = Vector(75,0,36)
+	
+	for i = 0, 5 do
+		local X = i * 35
+		local Y = 30 - i * 3
+		
+		self:AddPassengerSeat( Vector(20 - X,Y,10), Angle(0,0,0) ).ExitPos = Vector(20 - X,25,30)
+		self:AddPassengerSeat( Vector(20 - X,-Y,10), Angle(0,180,0) ).ExitPos = Vector(20 - X,-25,30)
 	end
 end
 
@@ -104,6 +119,62 @@ function ENT:PrimaryAttack()
 	self:FireBullets( bullet )
 	
 	self:TakePrimaryAmmo()
+end
+
+
+function ENT:SecondaryAttack()
+	if self:GetAI() then return end
+	
+	if not self:CanSecondaryAttack() then return end
+	
+	self:EmitSound( "LAATi_FIREMISSILE" )
+	
+	self:SetNextSecondary( 0.6 )
+	
+	self:TakeSecondaryAmmo(2)
+	
+	local startpos = self:GetRotorPos()
+	local tr = util.TraceHull( {
+		start = startpos,
+		endpos = (startpos + self:GetForward() * 50000),
+		mins = Vector( -40, -40, -40 ),
+		maxs = Vector( 40, 40, 40 ),
+		filter = function( e )
+			local collide = e ~= self
+			return collide
+		end
+	} )
+	local AltLauncherType = self:GetBodygroup( 3 ) == 0
+	
+	for i = -1,1,2 do
+		local ent = ents.Create( "lunasflightschool_missile" )
+		local Pos = self:LocalToWorld( Vector((AltLauncherType and -20 or 206.07) ,59 * i,286.88) )
+		ent:SetPos( Pos )
+		ent:SetAngles( (tr.HitPos - Pos):Angle() )
+		ent:Spawn()
+		ent:Activate()
+		ent:SetAttacker( self:GetDriver() )
+		ent:SetInflictor( self )
+		ent:SetStartVelocity( self:GetVelocity():Length() )
+
+		if tr.Hit then
+			local Target = tr.Entity
+			if IsValid( Target ) then
+				if Target:GetClass():lower() ~= "lunasflightschool_missile" then
+					ent:SetLockOn( Target )
+					ent:SetStartVelocity( 0 )
+				end
+			end
+		end
+		
+		if AltLauncherType then
+			ent:SetCleanMissile( true )
+		else
+			ent:SetDirtyMissile( true )
+		end
+		
+		constraint.NoCollide( ent, self, 0, 0 ) 
+	end
 end
 
 function ENT:FireRearGun()
@@ -321,7 +392,7 @@ function ENT:BallTurretL( Driver, Pod )
 				endpos = (startpos + Dir * 50000),
 			} )
 			
-			self:BallturretDamage( Trace.Entity, Driver )
+			self:BallturretDamage( Trace.Entity, Driver, Trace.HitPos, Dir )
 		end
 	end
 end
@@ -347,7 +418,7 @@ function ENT:BallTurretR( Driver, Pod )
 				endpos = (startpos + Dir * 50000),
 			} )
 			
-			self:BallturretDamage( Trace.Entity, Driver )
+			self:BallturretDamage( Trace.Entity, Driver, Trace.HitPos, Dir )
 		end
 	end
 end
@@ -356,8 +427,11 @@ function ENT:WingTurretsFire( Driver, Pod )
 	if not IsValid( Pod ) or not IsValid( Driver ) then self:SetWingTurretFire( false ) return end
 	
 	local EyeAngles = Pod:WorldToLocalAngles( Driver:EyeAngles() )
-	local KeyAttack = Driver:KeyDown( IN_ATTACK ) 
 	
+	local Forward = self:GetForward()
+
+	local KeyAttack = Driver:KeyDown( IN_ATTACK ) and math.abs( self:WorldToLocalAngles( EyeAngles ).y) < 55
+
 	if KeyAttack then
 		local startpos = self:GetRotorPos() + EyeAngles:Up() * 250
 		local TracePlane = util.TraceLine( {
@@ -368,7 +442,6 @@ function ENT:WingTurretsFire( Driver, Pod )
 		self:SetWingTurretTarget( TracePlane.HitPos )
 	end
 	self:SetWingTurretFire( KeyAttack )
-	
 	
 	local DesEndPos = self:GetWingTurretTarget()
 	local DesStartPos = Vector(-172.97,334.04,93.25)
@@ -384,19 +457,22 @@ function ENT:WingTurretsFire( Driver, Pod )
 			DesStartPos = Vector(-174.79,350.05,125.98)
 		end
 		
-		self:BallturretDamage( Trace.Entity, Driver )
+		self:BallturretDamage( Trace.Entity, Driver, EndPos, (EndPos - StartPos):GetNormalized() )
 	end
 end
 
-function ENT:BallturretDamage( target, attacker )
+function ENT:BallturretDamage( target, attacker, HitPos, HitDir )
 	if not IsValid( target ) or not IsValid( attacker ) then return end
 
 	if target ~= self then
 		local dmginfo = DamageInfo()
 		dmginfo:SetDamage( 1000 * FrameTime() )
 		dmginfo:SetAttacker( attacker )
-		dmginfo:SetDamageType( DMG_ENERGYBEAM )
+		--dmginfo:SetDamageType( DMG_ENERGYBEAM )
+		dmginfo:SetDamageType( DMG_SHOCK )
 		dmginfo:SetInflictor( self ) 
+		dmginfo:SetDamagePosition( HitPos ) 
+		dmginfo:SetDamageForce( HitDir * 10000 ) 
 		target:TakeDamageInfo( dmginfo )
 	end
 end

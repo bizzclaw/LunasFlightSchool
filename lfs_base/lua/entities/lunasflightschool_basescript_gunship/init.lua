@@ -103,6 +103,7 @@ function ENT:CalcFlightCustom( PhysObj, vDirection, fForce )
 		
 		if AI then
 			EyeAngles = self:RunAI()
+			OnGround = false
 		end
 		
 		self:MainGunPoser( EyeAngles )
