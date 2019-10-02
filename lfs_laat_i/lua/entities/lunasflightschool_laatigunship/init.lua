@@ -280,44 +280,59 @@ end
 
 function ENT:OnLandingGearToggled( bOn )
 	if self:GetAI() then return end
-
-	if self:GetBodygroup( 2 ) == 0 then
-		local DoorMode = self:GetDoorMode() + 1
-
-		self:SetDoorMode( DoorMode )
+	
+	local Driver = self:GetDriver()
+	
+	if not IsValid( Driver ) then return end
+	
+	if Driver:KeyDown( IN_ZOOM ) then
+		local ToggleHatch = not self:GetRearHatch()
+		self:SetRearHatch( ToggleHatch )
 		
-		if DoorMode == 1 then
+		if ToggleHatch then
 			self:EmitSound( "lfs/laat/door_open.wav" )
-		end
-		
-		if DoorMode == 2 then
-			self:PlayAnimation( "doors_open" )
-			self:EmitSound( "lfs/laat/door_large_open.wav" )
-		end
-		
-		if DoorMode == 3 then
-			self:PlayAnimation( "doors_close" )
-			self:EmitSound( "lfs/laat/door_large_close.wav" )
-		end
-		
-		if DoorMode >= 4 then
-			self:SetDoorMode( 0 )
+		else
 			self:EmitSound( "lfs/laat/door_close.wav" )
 		end
 	else
-		local DoorMode = self:GetDoorMode() + 1
+		if self:GetBodygroup( 2 ) == 0 then
+			local DoorMode = self:GetDoorMode() + 1
 
-		self:SetDoorMode( DoorMode )
+			self:SetDoorMode( DoorMode )
+			
+			if DoorMode == 1 then
+				self:EmitSound( "lfs/laat/door_open.wav" )
+			end
+			
+			if DoorMode == 2 then
+				self:PlayAnimation( "doors_open" )
+				self:EmitSound( "lfs/laat/door_large_open.wav" )
+			end
+			
+			if DoorMode == 3 then
+				self:PlayAnimation( "doors_close" )
+				self:EmitSound( "lfs/laat/door_large_close.wav" )
+			end
+			
+			if DoorMode >= 4 then
+				self:SetDoorMode( 0 )
+				self:EmitSound( "lfs/laat/door_close.wav" )
+			end
+		else
+			local DoorMode = self:GetDoorMode() + 1
 
-		if DoorMode == 1 then
-			self:PlayAnimation( "doors_open" )
-			self:EmitSound( "lfs/laat/door_large_open.wav" )
-		end
-		
-		if DoorMode >= 2 then
-			self:PlayAnimation( "doors_close" )
-			self:EmitSound( "lfs/laat/door_large_close.wav" )
-			self:SetDoorMode( 0 )
+			self:SetDoorMode( DoorMode )
+
+			if DoorMode == 1 then
+				self:PlayAnimation( "doors_open" )
+				self:EmitSound( "lfs/laat/door_large_open.wav" )
+			end
+			
+			if DoorMode >= 2 then
+				self:PlayAnimation( "doors_close" )
+				self:EmitSound( "lfs/laat/door_large_close.wav" )
+				self:SetDoorMode( 0 )
+			end
 		end
 	end
 end

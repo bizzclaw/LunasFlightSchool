@@ -18,13 +18,14 @@ function ENT:LFSCalcViewThirdPerson( view, ply, FirstPerson )
 		local radius = 800
 		radius = radius + radius * Pod:GetCameraDistance()
 		
-		local TargetOrigin = self:GetRotorPos() - view.angles:Forward() * radius + view.angles:Up() * 250
+		local StartPos = self:GetRotorPos() + view.angles:Up() * 250
+		local EndPos = StartPos - view.angles:Forward() * radius
 		
 		local WallOffset = 4
 
 		local tr = util.TraceHull( {
-			start = view.origin,
-			endpos = TargetOrigin,
+			start = StartPos,
+			endpos = EndPos,
 			filter = function( e )
 				local c = e:GetClass()
 				local collide = not c:StartWith( "prop_physics" ) and not c:StartWith( "prop_dynamic" ) and not c:StartWith( "prop_ragdoll" ) and not e:IsVehicle() and not c:StartWith( "gmod_" ) and not c:StartWith( "player" ) and not e.LFS
@@ -69,10 +70,12 @@ function ENT:LFSCalcViewThirdPerson( view, ply, FirstPerson )
 		if FirstPerson then
 			view.origin = view.origin + Pod:GetUp() * 40
 		else
+			view.origin = ply:GetShootPos() + Pod:GetUp() * 40
+			
 			local radius = 800
 			radius = radius + radius * Pod:GetCameraDistance()
 			
-			local TargetOrigin = self:GetPos() - view.angles:Forward() * radius + view.angles:Up() * 250
+			local TargetOrigin = view.origin - view.angles:Forward() * radius
 			
 			local WallOffset = 4
 
@@ -251,6 +254,12 @@ function ENT:AnimCabin()
 end
 
 function ENT:AnimLandingGear()
+	local Tval = self:GetRearHatch() and 32 or 0
+	local Rate = 50 * FrameTime()
+	
+	self.smRH = self.smRH and self.smRH + math.Clamp(Tval - self.smRH,-Rate,Rate) or 0
+	
+	self:ManipulateBoneAngles( 7, Angle(0,-self.smRH,0) )	
 end
 
 function ENT:Draw()
