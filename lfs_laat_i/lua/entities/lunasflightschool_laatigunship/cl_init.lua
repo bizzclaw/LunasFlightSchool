@@ -102,7 +102,7 @@ function ENT:LFSCalcViewThirdPerson( view, ply, FirstPerson )
 end
 
 function ENT:ExhaustFX()
-	local FullThrottle = self:GetThrottlePercent() >= 50
+	local FullThrottle = self:GetThrottlePercent() >= 35
 	
 	if self.OldFullThrottle ~= FullThrottle then
 		self.OldFullThrottle = FullThrottle
