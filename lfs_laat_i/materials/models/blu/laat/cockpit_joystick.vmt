@@ -17,7 +17,7 @@
 
     $phong 1
 	// $phongexponent 7
-	$phongexponenttexture "models/blu/laat/details/HaloSP"
+	$phongexponenttexture "models/blu/laat/details/halosp"
 	$phongboost	2
 	$phongalbedotint 1
 	$phongfresnelranges	"[0.8 0.8 0.8]"
