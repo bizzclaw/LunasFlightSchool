@@ -199,7 +199,9 @@ function ENT:AnimCabin()
 		self.OldWingTurretFire = FireWingTurret
 		
 		if FireWingTurret then
-			self.BTLOOP = CreateSound( self, "LAATi_BT_FIRE_LOOP" )
+			self:EmitSound("LAATi_BT_FIRE")
+			
+			self.BTLOOP = CreateSound( self, "LAATi_BT_FIRE_LOOP_CHAN1" )
 			self.BTLOOP:Play()
 			
 			local effectdata = EffectData()
@@ -218,7 +220,9 @@ function ENT:AnimCabin()
 			self.OldFireBTR = Fire
 			
 			if Fire then
-				self.BTRLOOP = CreateSound( self, "LAATi_BT_FIRE_LOOP" )
+				self:EmitSound("LAATi_BT_FIRE")
+				
+				self.BTRLOOP = CreateSound( self, "LAATi_BT_FIRE_LOOP_CHAN2" )
 				self.BTRLOOP:Play()
 				
 				local effectdata = EffectData()
@@ -238,7 +242,9 @@ function ENT:AnimCabin()
 			self.OldFireBTL = Fire
 			
 			if Fire then
-				self.BTLLOOP = CreateSound( self, "LAATi_BT_FIRE_LOOP" )
+				self:EmitSound("LAATi_BT_FIRE")
+				
+				self.BTLLOOP = CreateSound( self, "LAATi_BT_FIRE_LOOP_CHAN3" )
 				self.BTLLOOP:Play()
 				
 				local effectdata = EffectData()

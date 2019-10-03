@@ -6,8 +6,6 @@ EFFECT.HitMat = Material( "sprites/light_glow02_add" )
 function EFFECT:Init( data )
 	self.Entity = data:GetEntity()
 	
-	self:EmitSound("LAATi_BT_FIRE")
-	
 	if IsValid( self.Entity ) then
 		self.ID = self.Entity:LookupAttachment( "muzzle_ballturret_right" )
 		

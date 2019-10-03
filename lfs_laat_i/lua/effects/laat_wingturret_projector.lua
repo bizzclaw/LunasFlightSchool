@@ -8,8 +8,6 @@ function EFFECT:Init( data )
 	
 	self.StartPos = Vector(-172.97,334.04,93.25)
 	self.EndPos = self.Entity:GetWingTurretTarget()
-	
-	self:EmitSound("LAATi_BT_FIRE")
 end
 
 function EFFECT:Think()

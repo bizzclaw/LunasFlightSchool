@@ -88,16 +88,32 @@ sound.Add( {
 	name = "LAATi_BT_FIRE",
 	channel = CHAN_WEAPON,
 	volume = 1.0,
-	level = 125,
+	level = 100,
 	pitch = {90, 110},
 	sound = "lfs/laat/ballturret_fire.mp3"
 } )
 
 sound.Add( {
-	name = "LAATi_BT_FIRE_LOOP",
-	channel = CHAN_WEAPON,
+	name = "LAATi_BT_FIRE_LOOP_CHAN1",
+	channel = CHAN_ITEM,
 	volume = 1.0,
-	level = 125,
+	level = 100,
+	sound = "lfs/laat/ballturret_loop.wav"
+} )
+
+sound.Add( {
+	name = "LAATi_BT_FIRE_LOOP_CHAN2",
+	channel = CHAN_VOICE2,
+	volume = 1.0,
+	level = 100,
+	sound = "lfs/laat/ballturret_loop.wav"
+} )
+
+sound.Add( {
+	name = "LAATi_BT_FIRE_LOOP_CHAN3",
+	channel = CHAN_VOICE,
+	volume = 1.0,
+	level = 100,
 	sound = "lfs/laat/ballturret_loop.wav"
 } )
 
