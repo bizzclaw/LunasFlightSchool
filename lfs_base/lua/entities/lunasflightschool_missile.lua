@@ -146,7 +146,7 @@ if SERVER then
 					util.Effect( "manhacksparks", effectdata, true, true )
 
 					local dmginfo = DamageInfo()
-						dmginfo:SetDamage( 1800 )
+						dmginfo:SetDamage( 1000 )
 						dmginfo:SetAttacker( IsValid( self:GetAttacker() ) and self:GetAttacker() or self )
 						dmginfo:SetDamageType( DMG_DIRECT )
 						dmginfo:SetInflictor( self ) 
