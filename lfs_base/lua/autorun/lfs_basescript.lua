@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 150 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 158)
+simfphys.LFS.VERSION = 151 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 158)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -185,7 +185,7 @@ local IS_MOUSE_ENUM = {
 	[MOUSE_4] = true,
 	[MOUSE_5] = true,
 	[MOUSE_WHEEL_UP] = true,
-	[MOUSE_WHEEL_DOWN ] = true,
+	[MOUSE_WHEEL_DOWN] = true,
 }
 
 function meta:lfsGetInput( name )

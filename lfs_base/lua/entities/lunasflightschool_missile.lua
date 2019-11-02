@@ -119,10 +119,44 @@ if SERVER then
 		return true
 	end
 
+	local IsThisSimfphys = {
+		["gmod_sent_vehicle_fphysics_base"] = true,
+		["gmod_sent_vehicle_fphysics_wheel"] = true,
+	}
+	
 	function ENT:PhysicsCollide( data )
 		if self:GetDisabled() then
 			self.MarkForRemove = true
 		else
+			local HitEnt = data.HitEntity
+			
+			if IsValid( HitEnt ) and not self.Explode then 
+				local Class = HitEnt:GetClass():lower()
+
+				if IsThisSimfphys[ Class ] then
+					local Pos = self:GetPos()
+					
+					if Class == "gmod_sent_vehicle_fphysics_wheel" then
+						HitEnt = HitEnt:GetBaseEnt()
+					end
+
+					local effectdata = EffectData()
+						effectdata:SetOrigin( Pos )
+						effectdata:SetNormal( -self:GetForward() )
+					util.Effect( "manhacksparks", effectdata, true, true )
+
+					local dmginfo = DamageInfo()
+						dmginfo:SetDamage( 1800 )
+						dmginfo:SetAttacker( IsValid( self:GetAttacker() ) and self:GetAttacker() or self )
+						dmginfo:SetDamageType( DMG_DIRECT )
+						dmginfo:SetInflictor( self ) 
+						dmginfo:SetDamagePosition( Pos ) 
+					HitEnt:TakeDamageInfo( dmginfo )
+					
+					sound.Play( "Missile.ShotDown", Pos, 140)
+				end
+			end
+			
 			self.Explode = true
 		end
 	end
