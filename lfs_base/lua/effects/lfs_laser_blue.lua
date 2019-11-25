@@ -87,6 +87,12 @@ end
 function EFFECT:Think()
 
 	if CurTime() > self.DieTime then
+		local effectdata = EffectData()
+			effectdata:SetStart( Vector(50,80,255) ) 
+			effectdata:SetOrigin( self.EndPos )
+			effectdata:SetNormal( self.Dir:GetNormalized() )
+		util.Effect( "lfs_laser_hit", effectdata )
+		
 		return false
 	end
 

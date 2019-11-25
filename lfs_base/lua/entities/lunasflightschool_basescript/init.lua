@@ -1246,8 +1246,7 @@ function ENT:OnTakeDamage( dmginfo )
 		else
 			local effectdata = EffectData()
 				effectdata:SetOrigin( dmginfo:GetDamagePosition() )
-				effectdata:SetNormal( dmgNormal )
-			util.Effect( "MetalSpark", effectdata )
+			util.Effect( "lfs_tracer_hit", effectdata )
 			
 			self:SetHP( NewHealth )
 		end
