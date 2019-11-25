@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 152 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 158)
+simfphys.LFS.VERSION = 154 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 158)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -503,6 +503,18 @@ if CLIENT then
 	local ShowPlaneIdent = cvarShowPlaneIdent and cvarShowPlaneIdent:GetBool() or true
 	local ShowShowRollIndic = cvarShowRollIndic and cvarShowRollIndic:GetBool() or false
 	
+	simfphys.LFS.AltitudeMinZ = 0
+	
+	function simfphys.LFS.DrawCircle( X, Y, radius )
+		local segmentdist = 360 / ( 2 * math.pi * radius / 2 )
+		
+		for a = 0, 360, segmentdist do
+			surface.DrawLine( X + math.cos( math.rad( a ) ) * radius, Y - math.sin( math.rad( a ) ) * radius, X + math.cos( math.rad( a + segmentdist ) ) * radius, Y - math.sin( math.rad( a + segmentdist ) ) * radius )
+			
+			surface.DrawLine( X + math.cos( math.rad( a ) ) * radius, Y - math.sin( math.rad( a ) ) * radius, X + math.cos( math.rad( a + segmentdist ) ) * radius, Y - math.sin( math.rad( a + segmentdist ) ) * radius )
+		end
+	end
+	
 	function simfphys.LFS.PlayNotificationSound()
 		local soundfile = simfphys.LFS.NotificationVoices[GetConVar( "lfs_notification_voice" ):GetString()]
 
@@ -584,16 +596,6 @@ if CLIENT then
 		return Parent:LFSCalcViewThirdPerson( view, ply )
 	end )
 
-	local function DrawCircle( X, Y, radius )
-		local segmentdist = 360 / ( 2 * math.pi * radius / 2 )
-		
-		for a = 0, 360, segmentdist do
-			surface.DrawLine( X + math.cos( math.rad( a ) ) * radius, Y - math.sin( math.rad( a ) ) * radius, X + math.cos( math.rad( a + segmentdist ) ) * radius, Y - math.sin( math.rad( a + segmentdist ) ) * radius )
-			
-			surface.DrawLine( X + math.cos( math.rad( a ) ) * radius, Y - math.sin( math.rad( a ) ) * radius, X + math.cos( math.rad( a + segmentdist ) ) * radius, Y - math.sin( math.rad( a + segmentdist ) ) * radius )
-		end
-	end
-
 	surface.CreateFont( "LFS_FONT", {
 		font = "Verdana",
 		extended = false,
@@ -648,41 +650,24 @@ if CLIENT then
 		outline = false,
 	} )
 	
-	local MinZ = 0
-	local function PaintPlaneHud( ent, X, Y )
-
+	local function PaintPlaneHud( ent, X, Y, ply )
 		if not IsValid( ent ) then return end
 		
 		local vel = ent:GetVelocity():Length()
 		
 		local Throttle = ent:GetThrottlePercent()
 		local Col = Throttle <= 100 and Color(255,255,255,255) or Color(255,0,0,255)
-		draw.SimpleText( "THR", "LFS_FONT", 10, 10, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-		draw.SimpleText( Throttle.."%" , "LFS_FONT", 120, 10, Col, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-		
+
 		local speed = math.Round(vel * 0.09144,0)
-		draw.SimpleText( "IAS", "LFS_FONT", 10, 35, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-		draw.SimpleText( speed.."km/h", "LFS_FONT", 120, 35, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-		
+
 		local ZPos = math.Round( ent:GetPos().z,0)
-		if (ZPos + MinZ)< 0 then MinZ = math.abs(ZPos) end
-		local alt = math.Round( (ent:GetPos().z + MinZ) * 0.0254,0)
-		draw.SimpleText( "ALT", "LFS_FONT", 10, 60, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-		draw.SimpleText( alt.."m" , "LFS_FONT", 120, 60, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-		
+		if (ZPos + simfphys.LFS.AltitudeMinZ)< 0 then simfphys.LFS.AltitudeMinZ = math.abs(ZPos) end
+		local alt = math.Round( (ent:GetPos().z + simfphys.LFS.AltitudeMinZ) * 0.0254,0)
+
 		local AmmoPrimary = ent:GetAmmoPrimary()
 		local AmmoSecondary = ent:GetAmmoSecondary()
-		
-		if ent:GetMaxAmmoPrimary() > -1 then
-			draw.SimpleText( "PRI", "LFS_FONT", 10, 85, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-			draw.SimpleText( ent:GetAmmoPrimary(), "LFS_FONT", 120, 85, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-		end
-		
-		if ent:GetMaxAmmoSecondary() > -1 then
-			draw.SimpleText( "SEC", "LFS_FONT", 10, 110, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-			draw.SimpleText( ent:GetAmmoSecondary(), "LFS_FONT", 120, 110, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-		end
-		
+
+		ent:LFSHudPaintInfoText( X, Y, speed, alt, AmmoPrimary, AmmoSecondary, Throttle )
 		ent:LFSHudPaint( X, Y, {speed = speed, altitude = alt, PrimaryAmmo = AmmoPrimary, SecondaryAmmo = AmmoSecondary, Throttle = Throttle}, ply )
 	end
 	
@@ -781,7 +766,6 @@ if CLIENT then
 			AllPlanes = simfphys.LFS:PlanesGetAll()
 		end
 		
-		--local Me = LocalPlayer()
 		local MyPos = ent:GetPos()
 		local MyTeam = ent:GetAITEAM()
 		
@@ -791,29 +775,25 @@ if CLIENT then
 					if isvector( v.SeatPos ) then
 						local rPos = v:LocalToWorld( v.SeatPos )
 						
-						--if Me:IsLineOfSightClear( rPos ) then
 						local Pos = rPos:ToScreen()
-						local Size = 60
 						local Dist = (MyPos - rPos):Length()
 						
 						if Dist < 13000 then
 							local Alpha = math.max(255 - Dist * 0.015,0)
 							local Team = v:GetAITEAM()
+							local IndicatorColor = Color(255,255,255,Alpha)
 							
 							if Team == 0 then
-								surface.SetDrawColor( 255, 150, 0, Alpha )
+								IndicatorColor = Color( 255, 150, 0, Alpha )
 							else
 								if Team ~= MyTeam then
-									surface.SetDrawColor( 255, 0, 0, Alpha )
+									IndicatorColor = Color( 255, 0, 0, Alpha )
 								else
-									surface.SetDrawColor( 0, 127, 255, Alpha )
+									IndicatorColor = Color( 0, 127, 255, Alpha )
 								end
 							end
 							
-							surface.DrawLine( Pos.x - Size, Pos.y + Size, Pos.x + Size, Pos.y + Size )
-							surface.DrawLine( Pos.x - Size, Pos.y - Size, Pos.x - Size, Pos.y + Size )
-							surface.DrawLine( Pos.x + Size, Pos.y - Size, Pos.x + Size, Pos.y + Size )
-							surface.DrawLine( Pos.x - Size, Pos.y - Size, Pos.x + Size, Pos.y - Size )
+							ent:LFSHudPaintPlaneIdentifier( Pos.x, Pos.y, IndicatorColor )
 						end
 					end
 				end
@@ -894,7 +874,7 @@ if CLIENT then
 			return
 		end
 		
-		PaintPlaneHud( Parent, X, Y )
+		PaintPlaneHud( Parent, X, Y, ply )
 		PaintPlaneIdentifier( Parent )
 		
 		local startpos =  Parent:GetRotorPos()
@@ -916,64 +896,10 @@ if CLIENT then
 		local Sub = Vector(HitPilot.x,HitPilot.y,0) - Vector(HitPlane.x,HitPlane.y,0)
 		local Len = Sub:Length()
 		local Dir = Sub:GetNormalized()
-		surface.SetDrawColor( 255, 255, 255, 100 )
-		if Len > 34 then
-			local FailStart = LFS_TIME_NOTIFY > CurTime()
-			if FailStart then
-				surface.SetDrawColor( 255, 0, 0, math.abs( math.cos( CurTime() * 10 ) ) * 255 )
-			end
-			
-			if not ply:lfsGetInput( "FREELOOK" ) or FailStart then
-				surface.DrawLine( HitPlane.x + Dir.x * 10, HitPlane.y + Dir.y * 10, HitPilot.x - Dir.x * 34, HitPilot.y- Dir.y * 34 )
-				
-				-- shadow
-				surface.SetDrawColor( 0, 0, 0, 50 )
-				surface.DrawLine( HitPlane.x + Dir.x * 10 + 1, HitPlane.y + Dir.y * 10 + 1, HitPilot.x - Dir.x * 34+ 1, HitPilot.y- Dir.y * 34 + 1 )
-			end
-		end
 		
-		surface.SetDrawColor( 255, 255, 255, 255 )
-		DrawCircle( HitPlane.x, HitPlane.y, 10 )
-		surface.DrawLine( HitPlane.x + 10, HitPlane.y, HitPlane.x + 20, HitPlane.y ) 
-		surface.DrawLine( HitPlane.x - 10, HitPlane.y, HitPlane.x - 20, HitPlane.y ) 
-		surface.DrawLine( HitPlane.x, HitPlane.y + 10, HitPlane.x, HitPlane.y + 20 ) 
-		surface.DrawLine( HitPlane.x, HitPlane.y - 10, HitPlane.x, HitPlane.y - 20 ) 
-		DrawCircle( HitPilot.x, HitPilot.y, 34 )
-		
-		-- shadow
-		surface.SetDrawColor( 0, 0, 0, 80 )
-		DrawCircle( HitPlane.x + 1, HitPlane.y + 1, 10 )
-		surface.DrawLine( HitPlane.x + 11, HitPlane.y + 1, HitPlane.x + 21, HitPlane.y + 1 ) 
-		surface.DrawLine( HitPlane.x - 9, HitPlane.y + 1, HitPlane.x - 16, HitPlane.y + 1 ) 
-		surface.DrawLine( HitPlane.x + 1, HitPlane.y + 11, HitPlane.x + 1, HitPlane.y + 21 ) 
-		surface.DrawLine( HitPlane.x + 1, HitPlane.y - 19, HitPlane.x + 1, HitPlane.y - 16 ) 
-		DrawCircle( HitPilot.x + 1, HitPilot.y + 1, 34 )
-		
-		if ShowShowRollIndic then
-			surface.SetDrawColor( 255, 255, 255, 255 )
-			
-			local Roll = Parent:GetAngles().roll
-			
-			local X = math.cos( math.rad( Roll ) )
-			local Y = math.sin( math.rad( Roll ) )
-			
-			surface.DrawLine( HitPlane.x + X * 50, HitPlane.y + Y * 50, HitPlane.x + X * 125, HitPlane.y + Y * 125 ) 
-			surface.DrawLine( HitPlane.x - X * 50, HitPlane.y - Y * 50, HitPlane.x - X * 125, HitPlane.y - Y * 125 ) 
-			
-			surface.DrawLine( HitPlane.x + 125, HitPlane.y, HitPlane.x + 130, HitPlane.y + 5 ) 
-			surface.DrawLine( HitPlane.x + 125, HitPlane.y, HitPlane.x + 130, HitPlane.y - 5 ) 
-			surface.DrawLine( HitPlane.x - 125, HitPlane.y, HitPlane.x - 130, HitPlane.y + 5 ) 
-			surface.DrawLine( HitPlane.x - 125, HitPlane.y, HitPlane.x - 130, HitPlane.y - 5 ) 
-			
-			surface.SetDrawColor( 0, 0, 0, 80 )
-			surface.DrawLine( HitPlane.x + X * 50 + 1, HitPlane.y + Y * 50 + 1, HitPlane.x + X * 125 + 1, HitPlane.y + Y * 125 + 1 ) 
-			surface.DrawLine( HitPlane.x - X * 50 + 1, HitPlane.y - Y * 50 + 1, HitPlane.x - X * 125 + 1, HitPlane.y - Y * 125 + 1 ) 
-			
-			surface.DrawLine( HitPlane.x + 126, HitPlane.y + 1, HitPlane.x + 131, HitPlane.y + 6 ) 
-			surface.DrawLine( HitPlane.x + 126, HitPlane.y + 1, HitPlane.x + 131, HitPlane.y - 4 ) 
-			surface.DrawLine( HitPlane.x - 126, HitPlane.y + 1, HitPlane.x - 129, HitPlane.y + 6 ) 
-			surface.DrawLine( HitPlane.x - 126, HitPlane.y + 1, HitPlane.x - 129, HitPlane.y - 4 ) 
-		end
+		Parent:LFSHudPaintInfoLine( HitPlane, HitPilot, LFS_TIME_NOTIFY, Dir, Len, ply:lfsGetInput( "FREELOOK" ) )
+		Parent:LFSHudPaintCrosshair( HitPlane, HitPilot )
+		Parent:LFSHudPaintRollIndicator( HitPlane, ShowShowRollIndic )
 	end )
 	
 	local Frame
