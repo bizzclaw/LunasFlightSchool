@@ -4,8 +4,6 @@ function EFFECT:Init( data )
 	self.Pos = data:GetOrigin()
 	self.Col = data:GetStart() or Vector(255,100,0)
 	
-	sound.Play( Sound( "lfs/laser_hitgeneric.ogg" ), self.Pos, SNDLVL_60dB )
-	
 	self.mat = Material( "sprites/light_glow02_add" )
 	
 	self.LifeTime = 0.2
