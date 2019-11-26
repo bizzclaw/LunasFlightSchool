@@ -389,7 +389,7 @@ function ENT:HandleEngine()
 			self:OnKeyThrottle( KeyThrottle )
 		end
 		
-		self.TargetRPM = math.Clamp( self.TargetRPM + RPMAdd,IdleRPM,(KeyThrottle and self:GetWepEnabled()) and LimitRPM or MaxRPM)
+		self.TargetRPM = math.Clamp( self.TargetRPM + RPMAdd,IdleRPM,((self:GetAI() or KeyThrottle) and self:GetWepEnabled()) and LimitRPM or MaxRPM)
 	else
 		self.TargetRPM = self.TargetRPM - math.Clamp(self.TargetRPM,-250,250)
 	end
@@ -1232,21 +1232,25 @@ function ENT:OnTakeDamage( dmginfo )
 	
 	if ShieldCanBlock then
 		local dmgNormal = -dmginfo:GetDamageForce():GetNormalized() 
+		local dmgPos = dmginfo:GetDamagePosition()
 		
 		self:SetNextShieldRecharge( 3 )
 		
 		if self:GetMaxShield() > 0 and self:GetShield() > 0 then
-			dmginfo:SetDamagePosition( dmginfo:GetDamagePosition() + dmgNormal * 250 ) 
+			dmginfo:SetDamagePosition( dmgPos + dmgNormal * 250 ) 
 			
 			net.Start("lfs_shieldhit")
-				net.WriteVector( dmginfo:GetDamagePosition() )
+				net.WriteVector( dmgPos )
 			net.Broadcast()
 			
 			self:TakeShieldDamage( Damage )
 		else
+			sound.Play( Sound( "weapons/fx/rics/ric"..math.random(1,5)..".wav" ), dmgPos, SNDLVL_70dB)
+	
 			local effectdata = EffectData()
-				effectdata:SetOrigin( dmginfo:GetDamagePosition() )
-			util.Effect( "lfs_tracer_hit", effectdata )
+				effectdata:SetOrigin( dmgPos )
+				effectdata:SetNormal( dmgNormal )
+			util.Effect( "MetalSpark", effectdata )
 			
 			self:SetHP( NewHealth )
 		end

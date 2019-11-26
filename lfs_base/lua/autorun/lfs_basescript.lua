@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 155 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 158)
+simfphys.LFS.VERSION = 156 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 158)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -117,24 +117,21 @@ function meta:lfsGetPlane()
 	
 	if not IsValid( Pod ) then return NULL end
 	
-	if Pod.LFSchecked == true then
+	if Pod.LFSchecked then
 		
 		return Pod.LFSBaseEnt
 		
-	elseif Pod.LFSchecked == nil then
-		
+	else
 		local Parent = Pod:GetParent()
 		
-		if not IsValid( Parent ) then Pod.LFSchecked = false return NULL end
+		if not IsValid( Parent ) then return NULL end
 		
-		if not Parent.LFS then Pod.LFSchecked = false return NULL end
+		if not Parent.LFS then return NULL end
 		
 		Pod.LFSchecked = true
 		Pod.LFSBaseEnt = Parent
 		
 		return Parent
-	else
-		return NULL
 	end
 end
 
@@ -656,7 +653,6 @@ if CLIENT then
 		local vel = ent:GetVelocity():Length()
 		
 		local Throttle = ent:GetThrottlePercent()
-		local Col = Throttle <= 100 and Color(255,255,255,255) or Color(255,0,0,255)
 
 		local speed = math.Round(vel * 0.09144,0)
 
@@ -825,6 +821,13 @@ if CLIENT then
 			util.Effect( "lfs_shield_deflect", effectdata )
 		end
 	end )
+	
+	hook.Add( "HUDShouldDraw", "!!!!_LFS_HideZOOM", function( name )
+		if not IsValid( LocalPlayer():lfsGetPlane() ) then return end
+		
+		if name == "CHudZoom" then return false end
+	end )
+
 	
 	hook.Add( "HUDPaint", "!!!!!LFS_hud", function()
 		local ply = LocalPlayer()

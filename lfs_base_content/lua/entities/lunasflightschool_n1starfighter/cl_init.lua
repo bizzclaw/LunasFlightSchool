@@ -129,9 +129,17 @@ function ENT:AnimRotor()
 		self.nextAstro = CurTime() + math.Rand(0.5,2)
 		self.AstroAng = math.Rand(-180,180)
 		
-		if math.random(0,4) == 3 then
-			self:EmitSound( "lfs/naboo_n1_starfighter/astromech/"..math.random(1,11)..".ogg" )
+		local HasShield = self:GetShield() > 0
+		
+		if self.OldShield == true and not HasShield then
+			self:EmitSound( "lfs/naboo_n1_starfighter/astromech/shieldsdown"..math.random(1,2)..".ogg" )
+		else
+			if math.random(0,4) == 3 then
+				self:EmitSound( "lfs/naboo_n1_starfighter/astromech/"..math.random(1,11)..".ogg" )
+			end
 		end
+		
+		self.OldShield = HasShield
 	end
 	
 	self.smastro = self.smastro and (self.smastro + (self.AstroAng - self.smastro) * FrameTime() * 10) or 0

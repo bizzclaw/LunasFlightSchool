@@ -188,7 +188,7 @@ function ENT:OnKeyThrottle( bPressed )
 	if bPressed then
 		if self:CanSound() then
 			self:EmitSound( "ARC170_BOOST" )
-			self:DelayNextSound( 1 )
+			self:DelayNextSound( 2 )
 		end
 	else
 		if (self:GetRPM() + 1) > self:GetMaxRPM() then

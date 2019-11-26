@@ -32,6 +32,8 @@ function ENT:LFSHudPaintPlaneIdentifier( X, Y, In_Col )
 end
 
 function ENT:LFSHudPaintInfoText( X, Y, speed, alt, AmmoPrimary, AmmoSecondary, Throttle )
+	local Col = Throttle <= 100 and Color(255,255,255,255) or Color(255,0,0,255)
+
 	draw.SimpleText( "THR", "LFS_FONT", 10, 10, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 	draw.SimpleText( Throttle.."%" , "LFS_FONT", 120, 10, Col, TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
 

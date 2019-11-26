@@ -52,7 +52,7 @@ end
 function ENT:MainGunPoser( EyeAngles )
 end
 
-function ENT:CalcFlightCustom( PhysObj, vDirection, fForce )
+local function CalcFlight(self, PhysObj, vDirection, fForce )
 	local Pod = self:GetDriverSeat()
 	if not IsValid( Pod ) then return end
 	
@@ -110,7 +110,7 @@ function ENT:CalcFlightCustom( PhysObj, vDirection, fForce )
 	end
 	
 	if self:GetThrottlePercent() > 10 then
-		EyeAngles.r = EyeAngles.r + math.Clamp( -self:GetAngVel().y + math.cos(CurTime()), -90,90 )
+		EyeAngles.r = EyeAngles.r + math.Clamp( -self:GetAngVel().y * (math.min(self:GetThrottlePercent(),100) / 100) + math.cos(CurTime()), -90,90 )
 	end
 	
 	local Angles = self:GetAngles()
@@ -190,7 +190,7 @@ end
 
 function ENT:ApplyThrust( PhysObj, vDirection, fForce ) 
 	if self:GetEngineActive() and not self:IsDestroyed() then
-		self:CalcFlightCustom( PhysObj, vDirection, fForce )
+		CalcFlight(self, PhysObj, vDirection, fForce )
 	end
 end
 

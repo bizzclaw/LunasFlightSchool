@@ -2,10 +2,9 @@
 
 function EFFECT:Init( data )
 	self.Pos = data:GetOrigin()
-
-	self:Spark( self.Pos )
+	self.Dir = data:GetNormal()
 	
-	sound.Play( Sound( "weapons/fx/rics/ric"..math.random(1,5)..".wav" ), self.Pos, SNDLVL_70dB)
+	self:Spark( self.Pos )
 end
 
 local Materials = {
@@ -33,21 +32,25 @@ function EFFECT:Spark( pos )
 	for i = 0, 10 do
 		local particle = emitter:Add( "sprites/rico1", pos )
 		
-		local vel = VectorRand() * 500
+		local vel = VectorRand() * 400 - self.Dir  * 160
 		
 		if particle then
 			particle:SetVelocity( vel )
 			particle:SetAngles( vel:Angle() + Angle(0,90,0) )
-			particle:SetDieTime( math.Rand(0.05,0.1) )
-			particle:SetStartAlpha( math.Rand( 200, 255 ) )
+			particle:SetDieTime( math.Rand(0.2,0.4) )
+			particle:SetStartAlpha( 255 )
 			particle:SetEndAlpha( 0 )
 			particle:SetStartSize( math.Rand(6,12) )
 			particle:SetEndSize( 0 )
 			particle:SetRoll( math.Rand(-100,100) )
 			particle:SetRollDelta( math.Rand(-100,100) )
-			particle:SetColor( 255, 255, 255 )
+			particle:SetColor( 255,255,255 )
+			particle:SetGravity( Vector(0,0,-1500) )
 
 			particle:SetAirResistance( 0 )
+			
+			particle:SetCollide( true )
+			particle:SetBounce( 1 )
 		end
 	end
 	

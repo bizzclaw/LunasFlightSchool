@@ -18,15 +18,15 @@ function EFFECT:Init( data )
 	for i = 0, 10 do
 		local particle = emitter:Add( "sprites/light_glow02_add", Pos )
 		
-		local vel = VectorRand() * 100 - Dir  * 40
+		local vel = VectorRand() * 200 - Dir  * 80
 		
 		if particle then
 			particle:SetVelocity( vel )
 			particle:SetAngles( vel:Angle() + Angle(0,90,0) )
 			particle:SetDieTime( math.Rand(0.2,0.4) )
-			particle:SetStartAlpha( math.Rand( 200, 255 ) )
+			particle:SetStartAlpha( 255 )
 			particle:SetEndAlpha( 0 )
-			particle:SetStartSize( math.Rand(6,12) )
+			particle:SetStartSize( math.Rand(12,24) )
 			particle:SetEndSize( 0 )
 			particle:SetRoll( math.Rand(-100,100) )
 			particle:SetRollDelta( math.Rand(-100,100) )
@@ -52,6 +52,6 @@ end
 function EFFECT:Render()
 	local Scale = (self.DieTime - CurTime()) / self.LifeTime
 	render.SetMaterial( self.mat )
-	render.DrawSprite( self.Pos, 100 * Scale, 100 * Scale, Color( self.Col.x, self.Col.y, self.Col.z, 255) )
-	render.DrawSprite( self.Pos, 25 * Scale, 25 * Scale, Color( 255, 255, 255, 255) )
+	render.DrawSprite( self.Pos, 200 * Scale, 200 * Scale, Color( self.Col.x, self.Col.y, self.Col.z, 255) )
+	render.DrawSprite( self.Pos, 50 * Scale, 50 * Scale, Color( 255, 255, 255, 255) )
 end

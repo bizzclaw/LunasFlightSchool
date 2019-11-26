@@ -87,6 +87,11 @@ end
 function EFFECT:Think()
 
 	if CurTime() > self.DieTime then
+		local effectdata = EffectData()
+			effectdata:SetOrigin( self.EndPos )
+			effectdata:SetNormal( self.Dir:GetNormalized() )
+		util.Effect( "lfs_tracer_hit", effectdata )
+		
 		return false
 	end
 
