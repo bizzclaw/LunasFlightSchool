@@ -1240,7 +1240,7 @@ function ENT:OnTakeDamage( dmginfo )
 			dmginfo:SetDamagePosition( dmgPos + dmgNormal * 250 ) 
 			
 			net.Start("lfs_shieldhit")
-				net.WriteVector( dmgPos )
+				net.WriteVector( dmginfo:GetDamagePosition() )
 			net.Broadcast()
 			
 			self:TakeShieldDamage( Damage )
