@@ -39,7 +39,7 @@ ENT.WingPos = Vector(100,0,10)
 ENT.ElevatorPos = Vector(-200,0,10)
 ENT.RudderPos = Vector(-200,0,10)
 
-ENT.MaxVelocity = 2300
+ENT.MaxVelocity = 2500
 
 ENT.MaxThrust = 50000
 

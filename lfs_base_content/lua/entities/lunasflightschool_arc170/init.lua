@@ -21,6 +21,15 @@ end
 
 function ENT:OnTick()
 	self:DisableWep( self:GetLGear() < 0.99 )
+
+	local FullThrottle = self:GetThrottlePercent() >= 35
+
+	if self.OldFullThrottle ~= FullThrottle then
+		self.OldFullThrottle = FullThrottle
+		if FullThrottle then 
+			self:EmitSound( "ARC170_BOOST" )
+		end
+	end
 end
 
 function ENT:RunOnSpawn()
@@ -187,7 +196,6 @@ end
 function ENT:OnKeyThrottle( bPressed )
 	if bPressed then
 		if self:CanSound() then
-			self:EmitSound( "ARC170_BOOST" )
 			self:DelayNextSound( 2 )
 		end
 	else

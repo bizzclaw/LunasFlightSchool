@@ -148,7 +148,7 @@ local function CalcFlight( self )
 	local MaxYaw = MaxTurnSpeed.y
 	local MaxRoll = MaxTurnSpeed.r
 	
-	local IsInVtolMode =  self:IsVtolModeActive()
+	local IsInVtolMode = self:IsVtolModeActive()
 	
 	local PhysObj = self:GetPhysicsObject()
 	if not IsValid( PhysObj ) then return end
@@ -254,6 +254,7 @@ local function CalcFlight( self )
 	local Stability = self:GetStability()
 
 	local RollRate =  math.min(self:GetVelocity():Length() / math.min(self:GetMaxVelocity() * 0.5,3000),1)
+
 	RudderFadeOut = math.max(RudderFadeOut,1 - RollRate)
 	
 	local ManualRoll = (D and MaxRoll or 0) - (A and MaxRoll or 0)
@@ -362,7 +363,10 @@ function ENT:HandleEngine()
 	local MaxVelocity = self:GetMaxVelocity()
 	
 	local EngActive = self:GetEngineActive()
-	
+
+	local KeyThrottle = false
+	local KeyBrake = false
+
 	self.TargetRPM = self.TargetRPM or 0
 	
 	if EngActive then
@@ -373,8 +377,6 @@ function ENT:HandleEngine()
 		local Driver = Pod:GetDriver()
 		
 		local RPMAdd = 0
-		local KeyThrottle = false
-		local KeyBrake = false
 		
 		if IsValid( Driver ) then 
 			KeyThrottle = Driver:lfsGetInput( "+THROTTLE" )
@@ -393,7 +395,22 @@ function ENT:HandleEngine()
 	else
 		self.TargetRPM = self.TargetRPM - math.Clamp(self.TargetRPM,-250,250)
 	end
-	
+
+	if isnumber( self.VtolAllowInputBelowThrottle ) then
+		local MaxRPMVtolMin = self:GetMaxRPM() * ((self.VtolAllowInputBelowThrottle - 1) / 100)
+
+		if self:GetRPM() < MaxRPMVtolMin and not KeyThrottle then
+			self.TargetRPM = math.min( self.TargetRPM, MaxRPMVtolMin )
+		end
+
+		--[[ -- while it makes perfect sense to clamp it in both directions, it just doesnt feel right
+		local MaxRPMVtolMax = self:GetMaxRPM() * (self.VtolAllowInputBelowThrottle / 100)
+		if self:GetRPM() > MaxRPMVtolMax and not KeyBrake then
+			self.TargetRPM = math.max( self.TargetRPM, MaxRPMVtolMax )
+		end
+		]]--
+	end
+
 	self:SetRPM( self:GetRPM() + (self.TargetRPM - self:GetRPM()) * FrameTime() )
 	
 	local PhysObj = self:GetPhysicsObject()
@@ -434,7 +451,7 @@ function ENT:HandleEngine()
 						local Up = KeyThrottle and self:GetThrustVtol() or 0
 						local Down = KeyBrake and -self:GetThrustVtol() or 0
 						
-						local VtolForce = (Up + Down) * PhysObj:GetMass() * FrameTime() 
+						local VtolForce = (Up + Down) * PhysObj:GetMass() * 0.015
 						
 						self.smfForce = isnumber( self.smfForce ) and (self.smfForce + (VtolForce - self.smfForce) * FrameTime() * 2) or VtolForce
 						self:ApplyThrustVtol( PhysObj, self:GetUp(), self.smfForce )
@@ -444,7 +461,7 @@ function ENT:HandleEngine()
 						local Up = Driver:lfsGetInput( "+THROTTLE" ) and self:GetThrustVtol() or 0
 						local Down = Driver:lfsGetInput( "-THROTTLE" ) and -self:GetThrustVtol() or 0
 						
-						local VtolForce = (Up + Down) * PhysObj:GetMass() * FrameTime() 
+						local VtolForce = (Up + Down) * PhysObj:GetMass() * 0.015
 						
 						self.smfForce = isnumber( self.smfForce ) and (self.smfForce + (VtolForce - self.smfForce) * FrameTime() * 2) or VtolForce
 						self:ApplyThrustVtol( PhysObj, self:GetUp(), self.smfForce )

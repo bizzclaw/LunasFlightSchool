@@ -9,20 +9,16 @@ function ENT:ExhaustFX()
 	if not self:GetEngineActive() then return end
 	
 	self.nextEFX = self.nextEFX or 0
-	
-	local THR = (self:GetRPM() - self.IdleRPM) / (self.LimitRPM - self.IdleRPM)
-	
-	local Driver = self:GetDriver()
-	if IsValid( Driver ) then
-		local W = Driver:lfsGetInput( "+THROTTLE" )
-		if W ~= self.oldW then
-			self.oldW = W
-			if W then
-				self.BoostAdd = 200
-			end
+
+	local FullThrottle = self:GetThrottlePercent() >= 35
+
+	if self.OldFullThrottle ~= FullThrottle then
+		self.OldFullThrottle = FullThrottle
+		if FullThrottle then 
+			self.BoostAdd = 200
 		end
 	end
-	
+
 	self.BoostAdd = self.BoostAdd and (self.BoostAdd - self.BoostAdd * FrameTime()) or 0
 	
 	if self.nextEFX < CurTime() then
