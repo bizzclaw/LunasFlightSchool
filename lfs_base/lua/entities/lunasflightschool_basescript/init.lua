@@ -396,7 +396,7 @@ function ENT:HandleEngine()
 		self.TargetRPM = self.TargetRPM - math.Clamp(self.TargetRPM,-250,250)
 	end
 
-	if isnumber( self.VtolAllowInputBelowThrottle ) then
+	if isnumber( self.VtolAllowInputBelowThrottle ) and not self:GetAI() then
 		local MaxRPMVtolMin = self:GetMaxRPM() * ((self.VtolAllowInputBelowThrottle - 1) / 100)
 
 		if self:GetRPM() < MaxRPMVtolMin and not KeyThrottle then
