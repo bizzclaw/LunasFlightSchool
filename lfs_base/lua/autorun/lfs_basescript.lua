@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 160 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 169)
+simfphys.LFS.VERSION = 161 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 169)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -719,7 +719,7 @@ if CLIENT then
 		end
 		
 		local Hide = me.SwitcherTime > Time
-		smHider = smHider + ((Hide and 1 or 0) - smHider) * FrameTime() * 15
+		smHider = smHider + ((Hide and 1 or 0) - smHider) * RealFrameTime() * 15
 		local Alpha1 = 135 + 110 * smHider 
 		local HiderOffset = 300 * smHider
 		local Offset = -50
