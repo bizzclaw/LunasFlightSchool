@@ -1375,7 +1375,7 @@ function ENT:PhysicsCollide( data, physobj )
 	end
 	
 	if IsValid( data.HitEntity ) then
-		if data.HitEntity:IsPlayer() or data.HitEntity:IsNPC() then
+		if data.HitEntity:IsPlayer() or data.HitEntity:IsNPC() or simfphys.LFS.CollisionFilter[ data.HitEntity:GetClass():lower() ] then
 			return
 		end
 	end

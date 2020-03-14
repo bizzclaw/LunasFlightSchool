@@ -6,10 +6,11 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 161 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 169)
+simfphys.LFS.VERSION = 162 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 169)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
+simfphys.LFS.CollisionFilter = {}
 simfphys.LFS.PlanesStored = {}
 simfphys.LFS.NextPlanesGetAll = 0
 simfphys.LFS.IgnorePlayers = cVar_playerignore and cVar_playerignore:GetBool() or false
@@ -227,7 +228,7 @@ if SERVER then
 	util.AddNetworkString( "lfs_shieldhit" )
 	util.AddNetworkString( "lfs_admin_setconvar" )
 	util.AddNetworkString( "lfs_player_request_filter" )
-	
+
 	net.Receive( "lfs_player_request_filter", function( length, ply )
 		if not IsValid( ply ) then return end
 		
@@ -261,7 +262,7 @@ if SERVER then
 			net.WriteTable( LFSent.CrosshairFilterEnts )
 		net.Send( ply )
 	end)
-	
+
 	net.Receive( "lfs_admin_setconvar", function( length, ply )
 		if not IsValid( ply ) or not ply:IsSuperAdmin() then return end
 		
@@ -270,7 +271,7 @@ if SERVER then
 		
 		RunConsoleCommand( ConVar, Value ) 
 	end)
-	
+
 	function meta:lfsSetAITeam( nTeam )
 		nTeam = nTeam or simfphys.LFS.PlayerDefaultTeam:GetInt()
 		
@@ -280,16 +281,22 @@ if SERVER then
 		
 		self:SetNWInt( "lfsAITeam", nTeam )
 	end
-	
+
 	function meta:lfsSetInput( name, value )
 		self.LFS_KEYDOWN = self.LFS_KEYDOWN and self.LFS_KEYDOWN or {}
 		self.LFS_KEYDOWN[ name ] = value
 	end
-	
+
+	function simfphys.LFS:AddColDMGFilterClass( name_class )
+		if not isstring( name_class ) then return end
+
+		simfphys.LFS.CollisionFilter[ name_class:lower() ] = true
+	end
+
 	hook.Add("CanExitVehicle","!!!lfsCanExitVehicle",function(vehicle,ply)
 		if IsValid( ply:lfsGetPlane() ) then return not ply.LFS_HIPSTER end
 	end)
-	
+
 	hook.Add( "PlayerButtonUp", "!!!lfsButtonUp", function( ply, button )
 		for _, LFS_BIND in pairs( ply:lfsGetControls() ) do
 			if LFS_BIND[ button ] then
