@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 167 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 169)
+simfphys.LFS.VERSION = 168 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 169)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -782,29 +782,29 @@ if CLIENT then
 	local AllPlanes = {}
 	local function PaintPlaneIdentifier( ent )
 		if not ShowPlaneIdent then return end
-		
+
 		if NextFind < CurTime() then
 			NextFind = CurTime() + 3
 			AllPlanes = simfphys.LFS:PlanesGetAll()
 		end
-		
+
 		local MyPos = ent:GetPos()
 		local MyTeam = ent:GetAITEAM()
-		
+
 		for _, v in pairs( AllPlanes ) do
 			if IsValid( v ) then
 				if v ~= ent then
 					if isvector( v.SeatPos ) then
 						local rPos = v:LocalToWorld( v.SeatPos )
-						
+
 						local Pos = rPos:ToScreen()
 						local Dist = (MyPos - rPos):Length()
-						
+
 						if Dist < 13000 then
 							local Alpha = math.max(255 - Dist * 0.015,0)
 							local Team = v:GetAITEAM()
 							local IndicatorColor = Color(255,255,255,Alpha)
-							
+
 							if Team == 0 then
 								IndicatorColor = Color( 255, 150, 0, Alpha )
 							else
@@ -814,7 +814,7 @@ if CLIENT then
 									IndicatorColor = Color( 0, 127, 255, Alpha )
 								end
 							end
-							
+
 							ent:LFSHudPaintPlaneIdentifier( Pos.x, Pos.y, IndicatorColor )
 						end
 					end
@@ -825,11 +825,11 @@ if CLIENT then
 
 	net.Receive( "lfs_player_request_filter", function( length )
 		local LFSent = net.ReadEntity()
-		
+
 		if not IsValid( LFSent ) then return end
-		
+
 		local Filter = net.ReadTable()
-		
+
 		LFSent.CrosshairFilterEnts = Filter
 	end )
 
@@ -838,12 +838,12 @@ if CLIENT then
 		surface.PlaySound( "common/wpn_hudon.ogg" )
 		LFS_TIME_NOTIFY = CurTime() + 2
 	end )
-	
+
 	hook.Add( "HUDShouldDraw", "!!!!_LFS_HideZOOM", function( name )
 		local ply = LocalPlayer()
-		
+
 		if not ply.lfsGetPlane or not IsValid( ply:lfsGetPlane() ) then return end
-		
+
 		if name == "CHudZoom" then return false end
 	end )
 
