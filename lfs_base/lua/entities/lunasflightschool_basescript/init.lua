@@ -1255,11 +1255,11 @@ function ENT:OnTakeDamage( dmginfo )
 		
 		if self:GetMaxShield() > 0 and self:GetShield() > 0 then
 			dmginfo:SetDamagePosition( dmgPos + dmgNormal * 250 ) 
-			
-			net.Start("lfs_shieldhit")
-				net.WriteVector( dmginfo:GetDamagePosition() )
-			net.Broadcast()
-			
+
+			local effectdata = EffectData()
+				effectdata:SetOrigin( dmginfo:GetDamagePosition() )
+			util.Effect( "lfs_shield_deflect", effectdata )
+
 			self:TakeShieldDamage( Damage )
 		else
 			sound.Play( Sound( "weapons/fx/rics/ric"..math.random(1,5)..".wav" ), dmgPos, SNDLVL_70dB)

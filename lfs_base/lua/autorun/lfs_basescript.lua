@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 162 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 169)
+simfphys.LFS.VERSION = 163 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 169)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -225,7 +225,6 @@ if SERVER then
 	resource.AddSingleFile( "materials/effects/lfs_base/spark_brightness.vtf" ) 
 	
 	util.AddNetworkString( "lfs_failstartnotify" )
-	util.AddNetworkString( "lfs_shieldhit" )
 	util.AddNetworkString( "lfs_admin_setconvar" )
 	util.AddNetworkString( "lfs_player_request_filter" )
 
@@ -818,15 +817,6 @@ if CLIENT then
 	net.Receive( "lfs_failstartnotify", function( len )
 		surface.PlaySound( "common/wpn_hudon.ogg" )
 		LFS_TIME_NOTIFY = CurTime() + 2
-	end )
-	
-	net.Receive( "lfs_shieldhit", function( len )
-		local Pos = net.ReadVector()
-		if isvector( Pos ) then
-			local effectdata = EffectData()
-				effectdata:SetOrigin( Pos )
-			util.Effect( "lfs_shield_deflect", effectdata )
-		end
 	end )
 	
 	hook.Add( "HUDShouldDraw", "!!!!_LFS_HideZOOM", function( name )
