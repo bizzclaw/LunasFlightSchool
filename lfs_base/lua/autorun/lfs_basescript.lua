@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 166 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 169)
+simfphys.LFS.VERSION = 167 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 169)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -225,6 +225,7 @@ if SERVER then
 	--resource.AddSingleFile( "materials/effects/lfs_base/spark.vtf" ) 
 	--resource.AddSingleFile( "materials/effects/lfs_base/spark_brightness.vtf" ) 
 	--resource.AddSingleFile( "materials/lfs_locked.png" )
+	--resource.AddSingleFile( "materials/lfs_controlpanel_bg.png" )
 	
 	util.AddNetworkString( "lfs_failstartnotify" )
 	util.AddNetworkString( "lfs_admin_setconvar" )
