@@ -219,10 +219,10 @@ end
 if SERVER then 
 	resource.AddWorkshop("1571918906")
 	
-	-- doing this because im 100% sure that people will have issues with missing textures because they don't keep their addons up to date.
-	resource.AddSingleFile( "materials/effects/lfs_base/spark.vmt" ) 
-	resource.AddSingleFile( "materials/effects/lfs_base/spark.vtf" ) 
-	resource.AddSingleFile( "materials/effects/lfs_base/spark_brightness.vtf" ) 
+	-- No longer required with the new and more reliable workshop format (should be)
+	--resource.AddSingleFile( "materials/effects/lfs_base/spark.vmt" ) 
+	--resource.AddSingleFile( "materials/effects/lfs_base/spark.vtf" ) 
+	--resource.AddSingleFile( "materials/effects/lfs_base/spark_brightness.vtf" ) 
 	
 	util.AddNetworkString( "lfs_failstartnotify" )
 	util.AddNetworkString( "lfs_admin_setconvar" )
