@@ -12,6 +12,7 @@ ENT.AdminSpawnable  = false
 
 ENT.AutomaticFrameAdvance = true
 ENT.RenderGroup = RENDERGROUP_BOTH 
+
 ENT.Editable = true
 
 ENT.LFS = true
@@ -63,6 +64,7 @@ function ENT:SetupDataTables()
 	self:NetworkVar( "Bool",2, "AI",	{ KeyName = "aicontrolled",	Edit = { type = "Boolean",	order = 1,	category = "AI"} } )
 	self:NetworkVar( "Bool",3, "IsGroundTouching" )
 	self:NetworkVar( "Bool",4, "RotorDestroyed" )
+	self:NetworkVar( "Bool",5, "lfsLockedStatus" )
 	
 	self:NetworkVar( "Int",2, "AITEAM", { KeyName = "aiteam", Edit = { type = "Int", order = 2,min = 0, max = 2, category = "AI"} } )
 	

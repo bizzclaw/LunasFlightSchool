@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 163 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 169)
+simfphys.LFS.VERSION = 165 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 169)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -16,6 +16,7 @@ simfphys.LFS.NextPlanesGetAll = 0
 simfphys.LFS.IgnorePlayers = cVar_playerignore and cVar_playerignore:GetBool() or false
 
 simfphys.LFS.FreezeTeams = CreateConVar( "lfs_freeze_teams", "0", {FCVAR_REPLICATED , FCVAR_ARCHIVE},"enable/disable auto ai-team switching" )
+simfphys.LFS.TeamPassenger = CreateConVar( "lfs_teampassenger", "0", {FCVAR_REPLICATED , FCVAR_ARCHIVE},"only allow players of matching ai-team to enter the vehicle? 1 = team only, 0 = everyone can enter" )
 simfphys.LFS.PlayerDefaultTeam = CreateConVar( "lfs_default_teams", "0", {FCVAR_REPLICATED , FCVAR_ARCHIVE},"set default player ai-team" )
 
 simfphys.LFS.pSwitchKeys = {[KEY_1] = 1,[KEY_2] = 2,[KEY_3] = 3,[KEY_4] = 4,[KEY_5] = 5,[KEY_6] = 6,[KEY_7] = 7,[KEY_8] = 8,[KEY_9] = 9,[KEY_0] = 10}
@@ -324,23 +325,31 @@ if SERVER then
 		if not IsValid( vehicle ) then return end
 		
 		if button == KEY_1 then
-			if not IsValid( vehicle:GetDriver() ) and not vehicle:GetAI() then
-				ply:ExitVehicle()
-				
-				local DriverSeat = vehicle:GetDriverSeat()
-				
-				if IsValid( DriverSeat ) then
-					timer.Simple( FrameTime(), function()
-						if not IsValid( vehicle ) or not IsValid( ply ) then return end
-						if IsValid( vehicle:GetDriver() ) or not IsValid( DriverSeat ) or vehicle:GetAI() then return end
-						
-						ply:EnterVehicle( DriverSeat )
-						
-						timer.Simple( FrameTime() * 2, function()
-							if not IsValid( ply ) or not IsValid( vehicle ) then return end
-							ply:SetEyeAngles( Angle(0,vehicle:GetAngles().y,0) )
+			if ply == vehicle:GetDriver() then
+				if vehicle:GetlfsLockedStatus() then
+					vehicle:UnLock()
+				else
+					vehicle:Lock()
+				end
+			else
+				if not IsValid( vehicle:GetDriver() ) and not vehicle:GetAI() then
+					ply:ExitVehicle()
+					
+					local DriverSeat = vehicle:GetDriverSeat()
+					
+					if IsValid( DriverSeat ) then
+						timer.Simple( FrameTime(), function()
+							if not IsValid( vehicle ) or not IsValid( ply ) then return end
+							if IsValid( vehicle:GetDriver() ) or not IsValid( DriverSeat ) or vehicle:GetAI() then return end
+							
+							ply:EnterVehicle( DriverSeat )
+							
+							timer.Simple( FrameTime() * 2, function()
+								if not IsValid( ply ) or not IsValid( vehicle ) then return end
+								ply:SetEyeAngles( Angle(0,vehicle:GetAngles().y,0) )
+							end)
 						end)
-					end)
+					end
 				end
 			end
 		else
@@ -652,7 +661,8 @@ if CLIENT then
 		additive = false,
 		outline = false,
 	} )
-	
+
+
 	local function PaintPlaneHud( ent, X, Y, ply )
 		if not IsValid( ent ) then return end
 		
@@ -672,7 +682,8 @@ if CLIENT then
 		ent:LFSHudPaintInfoText( X, Y, speed, alt, AmmoPrimary, AmmoSecondary, Throttle )
 		ent:LFSHudPaint( X, Y, {speed = speed, altitude = alt, PrimaryAmmo = AmmoPrimary, SecondaryAmmo = AmmoSecondary, Throttle = Throttle}, ply )
 	end
-	
+
+	local LockText = Material( "lfs_locked.png" )
 	local smHider = 0
 	local function PaintSeatSwitcher( ent, X, Y )
 		local me = LocalPlayer()
@@ -738,6 +749,13 @@ if CLIENT then
 					draw.RoundedBox(5, X + Offset - HiderOffset, yPos + I * 30, 35 + HiderOffset, 25, Color(127,0,0,100 + 50 * smHider) )
 				else
 					draw.RoundedBox(5, X + Offset - HiderOffset, yPos + I * 30, 35 + HiderOffset, 25, Color(0,0,0,100 + 50 * smHider) )
+				end
+				if I == SeatCount then
+					if ent:GetlfsLockedStatus() then
+						surface.SetDrawColor( 255, 255, 255, 255 )
+						surface.SetMaterial( LockText  )
+						surface.DrawTexturedRect( X + Offset - HiderOffset - 25, yPos + I * 30, 25, 25 )
+					end
 				end
 				if Hide then
 					if Passengers[I] then
@@ -1283,6 +1301,18 @@ if CLIENT then
 			function CheckBox:OnChange( val )
 				net.Start("lfs_admin_setconvar")
 					net.WriteString("lfs_freeze_teams")
+					net.WriteString( tostring( val and 1 or 0 ) )
+				net.SendToServer()
+			end
+
+			local CheckBox = vgui.Create( "DCheckBoxLabel", DPanel )
+			CheckBox:SetPos( 20, 85 )
+			CheckBox:SetText( "Only allow Players of matching AI-Team to enter Vehicles" )
+			CheckBox:SetValue( GetConVar( "lfs_teampassenger" ):GetInt() )
+			CheckBox:SizeToContents()
+			function CheckBox:OnChange( val )
+				net.Start("lfs_admin_setconvar")
+					net.WriteString("lfs_teampassenger")
 					net.WriteString( tostring( val and 1 or 0 ) )
 				net.SendToServer()
 			end

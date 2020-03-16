@@ -531,6 +531,10 @@ function ENT:HandleActive()
 	local Active = self:GetActive()
 	
 	if Driver ~= self:GetDriver() then
+		if self:GetlfsLockedStatus() then
+			self:UnLock()
+		end
+
 		if self.HideDriver then
 			if IsValid( self:GetDriver() ) then
 				self:GetDriver():SetNoDraw( false )
@@ -717,13 +721,32 @@ end
 function ENT:OnLandingGearToggled( bOn )
 end
 
+function ENT:Lock()
+	self:SetlfsLockedStatus( true )
+	self:EmitSound( "doors/latchlocked2.wav" )
+end
+
+function ENT:UnLock()
+	self:SetlfsLockedStatus( false )
+	self:EmitSound( "doors/latchunlocked1.wav" )
+end
+
 function ENT:Use( ply )
+	if not IsValid( ply ) then return end
+
+	if self:GetlfsLockedStatus() or (simfphys.LFS.TeamPassenger:GetBool() and ((self:GetAITEAM() ~= ply:lfsGetAITeam()) and ply:lfsGetAITeam() ~= 0 and self:GetAITEAM() ~= 0)) then 
+
+		self:EmitSound( "doors/default_locked.wav" )
+
+		return
+	end
+
 	self:SetPassenger( ply )
 end
 
 function ENT:SetPassenger( ply )
 	if not IsValid( ply ) then return end
-	
+
 	local AI = self:GetAI()
 	local DriverSeat = self:GetDriverSeat()
 	
