@@ -26,7 +26,8 @@ function ENT:Initialize()
 	self:SetSolid( SOLID_VPHYSICS )
 	self:SetUseType( SIMPLE_USE )
 	self:SetRenderMode( RENDERMODE_TRANSALPHA )
-	
+	self:AddFlags( FL_OBJECT ) -- this allows npcs to see this entity
+
 	local PObj = self:GetPhysicsObject()
 	
 	if not IsValid( PObj ) then 
@@ -1460,8 +1461,15 @@ end
 
 function ENT:CanSee( otherEnt )
 	if not IsValid( otherEnt ) then return false end
-	
-	return util.TraceLine( { start = self:GetRotorPos(), filter = {self,self.wheel_L,self.wheel_R,self.wheel_C}, endpos = otherEnt:GetPos() } ).HitWorld
+	return util.TraceHull( { start = self:GetRotorPos(), filter = {self,self.wheel_L,self.wheel_R,self.wheel_C}, endpos = otherEnt:GetPos(), mins = Vector( -10, -10, -10 ),maxs = Vector( 10, 10, 10 ) } ).Entity == otherEnt
+end
+
+function ENT:AIGetNPCRelationship( npc_class )
+	return simfphys.LFS:GetNPCRelationship( npc_class )
+end
+
+function ENT:AIGetNPCTargets()
+	return simfphys.LFS:NPCsGetAll()
 end
 
 function ENT:AIGetTarget()
@@ -1509,7 +1517,26 @@ function ENT:AIGetTarget()
 			end
 		end
 	end
-	
+
+	if not simfphys.LFS.IgnoreNPCs then
+		for _, v in pairs( self:AIGetNPCTargets() ) do
+			if IsValid( v ) then
+				local HisTeam = self:AIGetNPCRelationship( v:GetClass() )
+				if HisTeam ~= "-1" then
+					if HisTeam ~= MyTeam or HisTeam == 0 then
+						local Dist = (v:GetPos() - MyPos):Length()
+						if Dist < TargetDistance then
+							if self:CanSee( v ) then
+								ClosestTarget = v
+								TargetDistance = Dist
+							end
+						end
+					end
+				end
+			end
+		end
+	end
+
 	self.FoundPlanes = simfphys.LFS:PlanesGetAll()
 	
 	for _, v in pairs( self.FoundPlanes ) do
@@ -1517,12 +1544,14 @@ function ENT:AIGetTarget()
 			local Dist = (v:GetPos() - MyPos):Length()
 			
 			if Dist < TargetDistance and self:AITargetInfront( v, 100 ) then
-				if v.IsDestroyed and not v:IsDestroyed() and v.GetAITEAM then
+				if not v:IsDestroyed() and v.GetAITEAM then
 					local HisTeam = v:GetAITEAM()
-					
+
 					if HisTeam ~= self:GetAITEAM() or HisTeam == 0 then
-						ClosestTarget = v
-						TargetDistance = Dist
+						if self:CanSee( v ) then
+							ClosestTarget = v
+							TargetDistance = Dist
+						end
 					end
 				end
 			end

@@ -24,6 +24,7 @@ function ENT:Initialize()
 	self:SetSolid( SOLID_VPHYSICS )
 	self:SetUseType( SIMPLE_USE )
 	self:SetRenderMode( RENDERMODE_TRANSALPHA )
+	self:AddFlags( FL_OBJECT ) -- this allows npcs to see this entity
 	
 	local PObj = self:GetPhysicsObject()
 	

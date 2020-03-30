@@ -6,18 +6,23 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 170 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 175)
+simfphys.LFS.VERSION = 172 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 175)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
 simfphys.LFS.CollisionFilter = {}
 simfphys.LFS.PlanesStored = {}
 simfphys.LFS.NextPlanesGetAll = 0
-simfphys.LFS.IgnorePlayers = cVar_playerignore and cVar_playerignore:GetBool() or false
+simfphys.LFS.NPCsStored = {}
+simfphys.LFS.NextNPCsGetAll = 0
 
+simfphys.LFS.cVar_IgnoreNPCs = CreateConVar( "lfs_ai_ignorenpcs", "0", {FCVAR_REPLICATED , FCVAR_ARCHIVE},"should LFS-AI and NPCs ignore each other?" )
 simfphys.LFS.FreezeTeams = CreateConVar( "lfs_freeze_teams", "0", {FCVAR_REPLICATED , FCVAR_ARCHIVE},"enable/disable auto ai-team switching" )
 simfphys.LFS.TeamPassenger = CreateConVar( "lfs_teampassenger", "0", {FCVAR_REPLICATED , FCVAR_ARCHIVE},"only allow players of matching ai-team to enter the vehicle? 1 = team only, 0 = everyone can enter" )
 simfphys.LFS.PlayerDefaultTeam = CreateConVar( "lfs_default_teams", "0", {FCVAR_REPLICATED , FCVAR_ARCHIVE},"set default player ai-team" )
+
+simfphys.LFS.IgnoreNPCs = simfphys.LFS.cVar_IgnoreNPCs and simfphys.LFS.cVar_IgnoreNPCs:GetBool() or false
+simfphys.LFS.IgnorePlayers = cVar_playerignore and cVar_playerignore:GetBool() or false
 
 simfphys.LFS.pSwitchKeys = {[KEY_1] = 1,[KEY_2] = 2,[KEY_3] = 3,[KEY_4] = 4,[KEY_5] = 5,[KEY_6] = 6,[KEY_7] = 7,[KEY_8] = 8,[KEY_9] = 9,[KEY_0] = 10}
 simfphys.LFS.pSwitchKeysInv = {[1] = KEY_1,[2] = KEY_2,[3] = KEY_3,[4] = KEY_4,[5] = KEY_5,[6] = KEY_6,[7] = KEY_7,[8] = KEY_8,[9] = KEY_9,[10] = KEY_0}
@@ -110,6 +115,82 @@ function simfphys.LFS:PlanesGetAll()
 	end
 	
 	return simfphys.LFS.PlanesStored
+end
+
+function simfphys.LFS:GetNPCRelationship( npc_class )
+	local Teams = {
+		["npc_fastzombie"] = 0,
+		["npc_headcrab"] = 0,
+		["npc_headcrab_black"] = 0,
+		["npc_headcrab_fast"] = 0,
+		["npc_antlion"] = 0,
+		["npc_antlionguard"] = 0,
+		["npc_zombie"] = 0,
+		["npc_zombie_torso"] = 0,
+		["npc_poisonzombie"] = 0,
+		["monster_alien_grunt"] = 0,
+		["monster_alien_slave"] = 0,
+		["monster_gargantua"] = 0,
+		["monster_bullchicken"] = 0,
+		["monster_headcrab"] = 0,
+		["monster_babycrab"] = 0,
+		["monster_zombie"] = 0,
+		["monster_houndeye"] = 0,
+		["monster_nihilanth"] = 0,
+		["monster_bigmomma"] = 0,
+		["monster_babycrab"] = 0,
+
+		["npc_breen"] = 1,
+		["npc_combine_s"] = 1,
+		["npc_combinedropship"] = 1,
+		["npc_combinegunship"] = 1,
+		["npc_crabsynth"] = 1,
+		["npc_cscanner"] = 1,
+		["npc_helicopter"] = 1,
+		["npc_manhack"] = 1,
+		["npc_metropolice"] = 1,
+		["npc_mortarsynth"] = 1,
+		["npc_sniper"] = 1,
+		["npc_stalker"] = 1,
+		["npc_strider"] = 1,
+		["monster_human_grunt"] = 1,
+		["monster_human_assassin"] = 1,
+		["monster_sentry"] = 1,
+
+		["npc_kleiner"] = 2,
+		["npc_monk"] = 2,
+		["npc_mossman"] = 2,
+		["npc_vortigaunt"] = 2,
+		["npc_alyx"] = 2,
+		["npc_barney"] = 2,
+		["npc_citizen"] = 2,
+		["npc_dog"] = 2,
+		["npc_eli"] = 2,
+		["monster_scientist"] = 2,
+		["monster_barney"] = 2,
+	}
+	return Teams[ npc_class ] or "-1"
+end
+
+function simfphys.LFS:NPCsGetAll()
+	local Time = CurTime()
+	
+	if simfphys.LFS.NextNPCsGetAll < Time then
+		simfphys.LFS.NextNPCsGetAll = Time + FrameTime()
+		
+		table.Empty( simfphys.LFS.NPCsStored )
+		
+		local Index = 0
+
+		for _,v in pairs( ents.GetAll() ) do
+			if v:IsNPC() then
+				Index = Index + 1
+				simfphys.LFS.NPCsStored[Index] = v
+			end
+		end
+	end
+	
+	return simfphys.LFS.NPCsStored
 end
 
 function meta:lfsGetPlane()
@@ -1324,6 +1405,18 @@ if CLIENT then
 					net.WriteString( tostring( val and 1 or 0 ) )
 				net.SendToServer()
 			end
+
+			local CheckBox = vgui.Create( "DCheckBoxLabel", DPanel )
+			CheckBox:SetPos( 20, 105 )
+			CheckBox:SetText( "LFS-AI and NPCs ignore each other" )
+			CheckBox:SetValue( GetConVar( "lfs_ai_ignorenpcs" ):GetInt() )
+			CheckBox:SizeToContents()
+			function CheckBox:OnChange( val )
+				net.Start("lfs_admin_setconvar")
+					net.WriteString("lfs_ai_ignorenpcs")
+					net.WriteString( tostring( val and 1 or 0 ) )
+				net.SendToServer()
+			end
 		end
 	end
 	
@@ -1469,6 +1562,10 @@ end
 
 cvars.AddChangeCallback( "ai_ignoreplayers", function( convar, oldValue, newValue ) 
 	simfphys.LFS.IgnorePlayers = tonumber( newValue ) ~=0
+end)
+
+cvars.AddChangeCallback( "lfs_ai_ignorenpcs", function( convar, oldValue, newValue ) 
+	simfphys.LFS.IgnoreNPCs = tonumber( newValue ) ~=0
 end)
 
  simfphys.LFS.CheckUpdates()
