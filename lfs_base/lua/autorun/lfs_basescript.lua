@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 169 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 175)
+simfphys.LFS.VERSION = 170 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 175)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -395,7 +395,13 @@ if SERVER then
 		local HullSize = Vector(18,18,0)
 		local Filter1 = {ent,ply}
 		local Filter2 = {ent,ply,b_ent}
-		
+
+		for _, filterEntity in pairs( constraint.GetAllConstrainedEntities( b_ent ) ) do
+			if IsValid( filterEntity ) then
+				table.insert( Filter2, filterEntity )
+			end
+		end
+
 		if vel:Length() > 250 then
 			local pos = b_ent:GetPos()
 			local dir = vel:GetNormalized()
