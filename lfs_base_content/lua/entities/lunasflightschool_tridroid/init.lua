@@ -92,10 +92,6 @@ function ENT:SecondaryAttack()
 	bullet.AmmoType = "Pistol"
 	bullet.Callback = function(att, tr, dmginfo)
 		dmginfo:SetDamageType(DMG_AIRBOAT)
-		
-		local effectdata = EffectData()
-			effectdata:SetOrigin( tr.HitPos )
-		util.Effect( "helicoptermegabomb", effectdata )
 	end
 	self:FireBullets( bullet )
 	
