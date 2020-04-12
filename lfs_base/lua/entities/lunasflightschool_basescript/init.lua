@@ -1307,24 +1307,23 @@ function ENT:OnTakeDamage( dmginfo )
 			self:Destroy()
 			
 			self.MaxPerfVelocity = self.MaxPerfVelocity * 10
-			
-			self.particleeffect = ents.Create( "info_particle_system" )
-			self.particleeffect:SetKeyValue( "effect_name" , "fire_large_01")
-			self.particleeffect:SetKeyValue( "start_active" , 1)
-			self.particleeffect:SetOwner( self )
-			self.particleeffect:SetPos( self:LocalToWorld( self:GetPhysicsObject():GetMassCenter() ) )
-			self.particleeffect:SetAngles( self:GetAngles() )
-			self.particleeffect:Spawn()
-			self.particleeffect:Activate()
-			self.particleeffect:SetParent( self )
-			self:dOwner( self.particleeffect )
-			
-			if self:GetAI() then
-				timer.Simple( 8, function()
-					if not IsValid( self ) then return end
-					self:Explode()
-				end)
-			end
+			local ExplodeTime = self:IsSpaceShip() and math.Rand(2,6) or (self:GetAI() and 8 or 9999)
+
+			local effectdata = EffectData()
+				effectdata:SetOrigin( self:GetPos() )
+			util.Effect( "lfs_explosion_nodebris", effectdata )
+
+			local effectdata = EffectData()
+				effectdata:SetOrigin( self:GetPhysicsObject():GetMassCenter() )
+				effectdata:SetEntity( self )
+				effectdata:SetScale( 1 )
+				effectdata:SetMagnitude( ExplodeTime )
+			util.Effect( "lfs_firetrail", effectdata )
+
+			timer.Simple( ExplodeTime, function()
+				if not IsValid( self ) then return end
+				self:Explode()
+			end)
 		end
 	end
 end
@@ -1372,7 +1371,7 @@ function ENT:Explode()
 	if IsValid( ent ) then
 		ent:SetPos( self:LocalToWorld( self:OBBCenter() ) )
 		ent.GibModels = self.GibModels
-		
+		ent.Vel = self:GetVelocity()
 		ent:Spawn()
 		ent:Activate()
 	end

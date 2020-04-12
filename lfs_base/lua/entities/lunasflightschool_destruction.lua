@@ -5,15 +5,6 @@ AddCSLuaFile()
 ENT.Type            = "anim"
 
 if CLIENT then
-	function ENT:Initialize()
-		local effectdata = EffectData()
-			effectdata:SetOrigin( self:GetPos() )
-		util.Effect( "lfs_explosion", effectdata )
-	end
-	
-	function ENT:OnRemove()
-	end
-	
 	function ENT:Draw()
 	end
 end
@@ -24,6 +15,12 @@ if SERVER then
 		self:SetMoveType( MOVETYPE_NONE )
 		self:SetSolid( SOLID_NONE )
 		self:DrawShadow( false ) 
+	
+		self.Vel = isvector( self.Vel ) and self.Vel or Vector(0,0,0)
+
+		local effectdata = EffectData()
+			effectdata:SetOrigin( self:GetPos() )
+		util.Effect( "lfs_explosion", effectdata )
 		
 		local gibs = {
 			"models/XQM/wingpiece2.mdl",
@@ -57,24 +54,20 @@ if SERVER then
 				ent:SetMaterial( "models/player/player_chrome1" )
 				ent:SetRenderMode( RENDERMODE_TRANSALPHA )
 				ent:SetCollisionGroup( COLLISION_GROUP_WORLD )
-				
+
 				local PhysObj = ent:GetPhysicsObject()
 				if IsValid( PhysObj ) then
-					PhysObj:SetVelocityInstantaneous( VectorRand() * 1000 )
+					PhysObj:SetVelocityInstantaneous( VectorRand() * math.max(300,self.Vel:Length() / 3) + self.Vel  )
 					PhysObj:AddAngleVelocity( VectorRand() * 500 ) 
 					PhysObj:EnableDrag( false ) 
 				end
 				
-				ent.particleeffect = ents.Create( "info_particle_system" )
-				ent.particleeffect:SetKeyValue( "effect_name" , "fire_small_03")
-				ent.particleeffect:SetKeyValue( "start_active" , 1)
-				ent.particleeffect:SetOwner( ent )
-				ent.particleeffect:SetPos( ent:GetPos() )
-				ent.particleeffect:SetAngles( ent:GetAngles() )
-				ent.particleeffect:SetParent( ent )
-				ent.particleeffect:Spawn()
-				ent.particleeffect:Activate()
-				ent.particleeffect:Fire( "Stop", "", math.random(0.5,3) )
+				local effectdata = EffectData()
+					effectdata:SetOrigin( Vector(0,0,0) )
+					effectdata:SetEntity( ent )
+					effectdata:SetScale( math.Rand(0.3,0.7) )
+					effectdata:SetMagnitude( math.Rand(0.5,2.5) )
+				util.Effect( "lfs_firetrail", effectdata )
 				
 				timer.Simple( 4.5 + math.Rand(0,0.5), function()
 					if not IsValid( ent ) then return end

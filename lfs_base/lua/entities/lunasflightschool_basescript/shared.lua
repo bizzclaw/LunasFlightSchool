@@ -217,5 +217,14 @@ sound.Add( {
 	volume = 1.0,
 	level = 125,
 	pitch = {75, 120},
-	sound = "^lfs/plane_explosion.wav"
+	sound = {"^lfs/plane_explosion1.wav","^lfs/plane_explosion2.wav","^lfs/plane_explosion3.wav"}
+} )
+
+sound.Add( {
+	name = "LFS_PLANE_KNOCKOUT",
+	channel = CHAN_STATIC,
+	volume = 1.0,
+	level = 140,
+	pitch = 100,
+	sound = {"lfs/plane_preexp1.ogg","lfs/plane_preexp2.ogg","lfs/plane_preexp3.ogg"}
 } )

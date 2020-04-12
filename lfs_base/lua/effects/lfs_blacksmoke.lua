@@ -20,7 +20,7 @@ local Materials = {
 }
 
 function EFFECT:Init( data )
-	local Pos = data:GetOrigin()
+	local Pos = data:GetOrigin() + VectorRand() * 50
 	
 	local emitter = ParticleEmitter( Pos, false )
 
@@ -31,11 +31,11 @@ function EFFECT:Init( data )
 			particle:SetVelocity( VectorRand() * 100 )
 			particle:SetDieTime( 1.5 )
 			particle:SetAirResistance( 600 ) 
-			particle:SetStartAlpha( 150 )
-			particle:SetStartSize( 30 )
-			particle:SetEndSize( math.Rand(150,200) )
+			particle:SetStartAlpha( 50 )
+			particle:SetStartSize( 80 )
+			particle:SetEndSize( math.Rand(250,300) )
 			particle:SetRoll( math.Rand(-1,1) * 100 )
-			particle:SetColor( 40,40,40 )
+			particle:SetColor( 70,70,70 )
 			particle:SetGravity( Vector( 0, 0, 500 ) )
 			particle:SetCollide( false )
 		end
