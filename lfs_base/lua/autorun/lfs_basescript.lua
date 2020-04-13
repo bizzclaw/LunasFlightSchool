@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 173 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 175)
+simfphys.LFS.VERSION = 174 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 175)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -96,50 +96,50 @@ function simfphys.LFS.GetVersion()
 	return simfphys.LFS.VERSION
 end
 
+hook.Add( "OnEntityCreated", "!!!!lfsEntitySorter", function( ent )
+	timer.Simple( FrameTime(), function() 
+		if not IsValid( ent ) then return end
+
+		if ent.LFS then table.insert( simfphys.LFS.PlanesStored, ent ) end
+
+		if isfunction( ent.IsNPC ) and ent.IsNPC() then table.insert( simfphys.LFS.NPCsStored, ent ) end
+	end )
+end )
+
+function simfphys.LFS:NPCsGetAll()
+	local Time = CurTime()
+	
+	if simfphys.LFS.NextNPCsGetAll < Time then
+		simfphys.LFS.NextNPCsGetAll = Time + FrameTime()
+
+		for index, npc in pairs( simfphys.LFS.NPCsStored ) do
+			if not IsValid( npc ) then
+				simfphys.LFS.NPCsStored[ index ] = nil
+			end
+		end
+	end
+
+	return simfphys.LFS.NPCsStored
+end
+
 function simfphys.LFS:PlanesGetAll()
 	local Time = CurTime()
 	
 	if simfphys.LFS.NextPlanesGetAll < Time then
 		simfphys.LFS.NextPlanesGetAll = Time + FrameTime()
-		
-		table.Empty( simfphys.LFS.PlanesStored )
-		
-		local Index = 0
 
-		for _,v in pairs( ents.GetAll() ) do
-			if v.LFS then
-				Index = Index + 1
-				simfphys.LFS.PlanesStored[Index] = v
+		for index, plane in pairs( simfphys.LFS.PlanesStored ) do
+			if not IsValid( plane ) then
+				simfphys.LFS.PlanesStored[ index ] = nil
 			end
 		end
 	end
-	
+
 	return simfphys.LFS.PlanesStored
 end
 
 function simfphys.LFS:GetNPCRelationship( npc_class )
 	local Teams = {
-		["npc_fastzombie"] = 0,
-		["npc_headcrab"] = 0,
-		["npc_headcrab_black"] = 0,
-		["npc_headcrab_fast"] = 0,
-		["npc_antlion"] = 0,
-		["npc_antlionguard"] = 0,
-		["npc_zombie"] = 0,
-		["npc_zombie_torso"] = 0,
-		["npc_poisonzombie"] = 0,
-		["monster_alien_grunt"] = 0,
-		["monster_alien_slave"] = 0,
-		["monster_gargantua"] = 0,
-		["monster_bullchicken"] = 0,
-		["monster_headcrab"] = 0,
-		["monster_babycrab"] = 0,
-		["monster_zombie"] = 0,
-		["monster_houndeye"] = 0,
-		["monster_nihilanth"] = 0,
-		["monster_bigmomma"] = 0,
-		["monster_babycrab"] = 0,
-
 		["npc_breen"] = 1,
 		["npc_combine_s"] = 1,
 		["npc_combinedropship"] = 1,
@@ -168,29 +168,29 @@ function simfphys.LFS:GetNPCRelationship( npc_class )
 		["npc_eli"] = 2,
 		["monster_scientist"] = 2,
 		["monster_barney"] = 2,
+
+		["npc_fastzombie"] = 3,
+		["npc_headcrab"] = 3,
+		["npc_headcrab_black"] = 3,
+		["npc_headcrab_fast"] = 3,
+		["npc_antlion"] = 3,
+		["npc_antlionguard"] = 3,
+		["npc_zombie"] = 3,
+		["npc_zombie_torso"] = 3,
+		["npc_poisonzombie"] = 3,
+		["monster_alien_grunt"] = 3,
+		["monster_alien_slave"] = 3,
+		["monster_gargantua"] = 3,
+		["monster_bullchicken"] = 3,
+		["monster_headcrab"] = 3,
+		["monster_babycrab"] = 3,
+		["monster_zombie"] = 3,
+		["monster_houndeye"] = 3,
+		["monster_nihilanth"] = 3,
+		["monster_bigmomma"] = 3,
+		["monster_babycrab"] = 3,
 	}
-	return Teams[ npc_class ] or "-1"
-end
-
-function simfphys.LFS:NPCsGetAll()
-	local Time = CurTime()
-	
-	if simfphys.LFS.NextNPCsGetAll < Time then
-		simfphys.LFS.NextNPCsGetAll = Time + FrameTime()
-		
-		table.Empty( simfphys.LFS.NPCsStored )
-		
-		local Index = 0
-
-		for _,v in pairs( ents.GetAll() ) do
-			if v:IsNPC() then
-				Index = Index + 1
-				simfphys.LFS.NPCsStored[Index] = v
-			end
-		end
-	end
-	
-	return simfphys.LFS.NPCsStored
+	return Teams[ npc_class ] or "0"
 end
 
 function meta:lfsGetPlane()
@@ -357,11 +357,18 @@ if SERVER then
 
 	function meta:lfsSetAITeam( nTeam )
 		nTeam = nTeam or simfphys.LFS.PlayerDefaultTeam:GetInt()
-		
+
+		local TeamText = {
+			[0] = "FRIENDLY TO EVERYONE",
+			[1] = "Team 1",
+			[2] = "Team 2",
+			[3] = "HOSTILE TO EVERYONE",
+		}
+
 		if self:lfsGetAITeam() ~= nTeam then
-			self:PrintMessage( HUD_PRINTTALK, "[LFS] Your AI-Team has been updated to: Team "..nTeam )
+			self:PrintMessage( HUD_PRINTTALK, "[LFS] Your AI-Team has been updated to: "..TeamText[ nTeam ] )
 		end
-		
+
 		self:SetNWInt( "lfsAITeam", nTeam )
 	end
 
@@ -890,15 +897,17 @@ if CLIENT then
 						if Dist < 13000 then
 							local Alpha = math.max(255 - Dist * 0.015,0)
 							local Team = v:GetAITEAM()
-							local IndicatorColor = Color(255,255,255,Alpha)
+							local IndicatorColor = Color( 255, 0, 0, Alpha )
 
 							if Team == 0 then
-								IndicatorColor = Color( 255, 150, 0, Alpha )
+								IndicatorColor = Color( 0, 255, 0, Alpha )
 							else
-								if Team ~= MyTeam then
-									IndicatorColor = Color( 255, 0, 0, Alpha )
-								else
-									IndicatorColor = Color( 0, 127, 255, Alpha )
+								if Team == 1 or Team == 2 then
+									if Team ~= MyTeam and MyTeam ~= 0 then
+										IndicatorColor = Color( 255, 0, 0, Alpha )
+									else
+										IndicatorColor = Color( 0, 127, 255, Alpha )
+									end
 								end
 							end
 
@@ -1372,7 +1381,7 @@ if CLIENT then
 			slider:SetSize( 300, 20 )
 			slider:SetText( "Player Default AI-Team" )
 			slider:SetMin( 0 )
-			slider:SetMax( 2 )
+			slider:SetMax( 3 )
 			slider:SetDecimals( 0 )
 			slider:SetConVar( "lfs_default_teams" )
 			function slider:OnValueChanged( val )

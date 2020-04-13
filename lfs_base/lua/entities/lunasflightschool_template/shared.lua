@@ -28,7 +28,14 @@ ENT.GibModels = {
 }
 ]]
 
-ENT.AITEAM = 1 -- 0 = FFA  1 = bad guys  2 = good guys
+ENT.AITEAM = 1
+--[[
+TEAMS:
+	0 = FRIENDLY TO EVERYONE
+	1 = FRIENDLY TO TEAM 1 and -1
+	2 = FRIENDLY TO TEAM 2 and -1
+	3 = HOSTILE TO EVERYONE
+]]
 
 ENT.Mass = 800 -- lower this value if you encounter spazz
 ENT.Inertia = Vector(20000,20000,20000) -- you must increase this when you increase mass or it will spazz

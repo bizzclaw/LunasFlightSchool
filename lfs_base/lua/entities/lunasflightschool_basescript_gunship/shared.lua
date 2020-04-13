@@ -28,3 +28,7 @@ ENT.LimitRPM = 100
 ENT.VerticalTakeoff = true
 ENT.VtolAllowInputBelowThrottle = 100
 ENT.MaxThrustVtol = 400
+
+function ENT:IsGunship()
+	return true
+end

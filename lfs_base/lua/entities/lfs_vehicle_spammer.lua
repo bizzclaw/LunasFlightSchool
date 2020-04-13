@@ -34,7 +34,7 @@ function ENT:SetupDataTables()
 	
 	self:NetworkVar( "String",0, "Type",	{ KeyName = "Vehicle Type",Edit = { type = "Combo",	order = 1,values = SpawnOptions,category = "Options"} } )
 	self:NetworkVar( "Bool",2, "AutoTeam",{ KeyName = "AI Auto Team",Edit = { type = "Boolean",	order = 3,	category = "Options"} } )
-	self:NetworkVar( "Int",3, "TeamOverride", { KeyName = "AI Team", Edit = { type = "Int", order = 4,min = 0, max = 2, category = "Options"} } )
+	self:NetworkVar( "Int",3, "TeamOverride", { KeyName = "AI Team", Edit = { type = "Int", order = 4,min = 0, max = 3, category = "Options"} } )
 	self:NetworkVar( "Int",4, "RespawnTime", { KeyName = "spawntime", Edit = { type = "Int", order = 5,min = 1, max = 120, category = "Options"} } )
 	self:NetworkVar( "Int",5, "Amount", { KeyName = "amount", Edit = { type = "Int", order = 6,min = 1, max = 10, category = "Options"} } )
 	self:NetworkVar( "Int",6, "SpawnWithSkin", { KeyName = "spawnwithskin", Edit = { type = "Int", order = 7,min = 0, max = 16, category = "Options"} } )

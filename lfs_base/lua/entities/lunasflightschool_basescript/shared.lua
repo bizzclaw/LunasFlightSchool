@@ -58,6 +58,7 @@ function ENT:SetupDataTables()
 	self:NetworkVar( "Entity",1, "DriverSeat" )
 	self:NetworkVar( "Entity",2, "Gunner" )
 	self:NetworkVar( "Entity",3, "GunnerSeat" )
+	self:NetworkVar( "Entity",4, "LockOnEnt" )
 	
 	self:NetworkVar( "Bool",0, "Active" )
 	self:NetworkVar( "Bool",1, "EngineActive" )
@@ -66,7 +67,7 @@ function ENT:SetupDataTables()
 	self:NetworkVar( "Bool",4, "RotorDestroyed" )
 	self:NetworkVar( "Bool",5, "lfsLockedStatus" )
 	
-	self:NetworkVar( "Int",2, "AITEAM", { KeyName = "aiteam", Edit = { type = "Int", order = 2,min = 0, max = 2, category = "AI"} } )
+	self:NetworkVar( "Int",2, "AITEAM", { KeyName = "aiteam", Edit = { type = "Int", order = 2,min = 0, max = 3, category = "AI"} } )
 	
 	self:NetworkVar( "Float",0, "LGear" )
 	self:NetworkVar( "Float",1, "RGear" )
@@ -185,6 +186,10 @@ function ENT:GetThrottlePercent()
 	local MaxRPM = self:GetMaxRPM()
 	
 	return math.max( math.Round(((self:GetRPM() - IdleRPM) / (MaxRPM - IdleRPM)) * 100,0) ,0)
+end
+
+function ENT:IsGunship()
+	return false
 end
 
 function ENT:IsSpaceShip()

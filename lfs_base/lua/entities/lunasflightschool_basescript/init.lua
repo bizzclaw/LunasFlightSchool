@@ -20,7 +20,7 @@ end
 
 function ENT:Initialize()
 	self:SetModel( self.MDL )
-	
+
 	self:PhysicsInit( SOLID_VPHYSICS )
 	self:SetMoveType( MOVETYPE_VPHYSICS )
 	self:SetSolid( SOLID_VPHYSICS )
@@ -29,7 +29,7 @@ function ENT:Initialize()
 	self:AddFlags( FL_OBJECT ) -- this allows npcs to see this entity
 
 	local PObj = self:GetPhysicsObject()
-	
+
 	if not IsValid( PObj ) then 
 		self:Remove()
 		
@@ -37,13 +37,13 @@ function ENT:Initialize()
 		
 		return
 	end
-	
+
 	PObj:EnableMotion( false )
 	PObj:SetMass( self.Mass ) 
 	PObj:SetDragCoefficient( self.Drag ) 
 	self.LFSInertiaDefault = PObj:GetInertia()
 	PObj:SetInertia( self.Inertia ) 
-	
+
 	self:InitPod()
 	self:InitWheels()
 	self:RunOnSpawn()
@@ -1268,7 +1268,7 @@ function ENT:OnTakeDamage( dmginfo )
 	
 	local Damage = dmginfo:GetDamage()
 	local CurHealth = self:GetHP()
-	local NewHealth = math.Clamp( CurHealth - Damage , 0, self:GetMaxHP()  )
+	local NewHealth = math.Clamp( CurHealth - Damage , -self:GetMaxHP(), self:GetMaxHP() )
 	local ShieldCanBlock = dmginfo:IsBulletDamage() or dmginfo:IsDamageType( DMG_AIRBOAT )
 	
 	if ShieldCanBlock then
@@ -1299,7 +1299,7 @@ function ENT:OnTakeDamage( dmginfo )
 		self:SetHP( NewHealth )
 	end
 	
-	if NewHealth == 0 and not (self:GetShield() > Damage and ShieldCanBlock) then
+	if NewHealth <= 0 and not (self:GetShield() > Damage and ShieldCanBlock) then
 		if not self:IsDestroyed() then
 			self.FinalAttacker = dmginfo:GetAttacker() 
 			self.FinalInflictor = dmginfo:GetInflictor()
@@ -1307,7 +1307,8 @@ function ENT:OnTakeDamage( dmginfo )
 			self:Destroy()
 			
 			self.MaxPerfVelocity = self.MaxPerfVelocity * 10
-			local ExplodeTime = self:IsSpaceShip() and math.Rand(2,6) or (self:GetAI() and 8 or 9999)
+			local ExplodeTime = self:IsSpaceShip() and (math.Clamp((self:GetVelocity():Length() - 250) / 500,0.1,6) * math.Rand(0,1)) or (self:GetAI() and 8 or 9999)
+			if self:IsGunship() then ExplodeTime = math.Rand(1,2) end
 
 			local effectdata = EffectData()
 				effectdata:SetOrigin( self:GetPos() )
@@ -1325,6 +1326,10 @@ function ENT:OnTakeDamage( dmginfo )
 				self:Explode()
 			end)
 		end
+	end
+
+	if NewHealth <= -self:GetMaxHP() then
+		self:Explode()
 	end
 end
 
@@ -1370,6 +1375,7 @@ function ENT:Explode()
 	local ent = ents.Create( "lunasflightschool_destruction" )
 	if IsValid( ent ) then
 		ent:SetPos( self:LocalToWorld( self:OBBCenter() ) )
+		ent:SetAngles( self:GetAngles() )
 		ent.GibModels = self.GibModels
 		ent.Vel = self:GetVelocity()
 		ent:Spawn()
@@ -1478,14 +1484,16 @@ function ENT:AIGetTarget()
 	
 	self.NextAICheck = CurTime() + 2
 	
-	local players = player.GetAll()
-	
-	local ClosestTarget = NULL
-	local TargetDistance = 60000
-	
 	local MyPos = self:GetPos()
 	local MyTeam = self:GetAITEAM()
-	
+
+	if MyTeam == 0 then self.LastTarget = NULL return NULL end
+
+	local players = player.GetAll()
+
+	local ClosestTarget = NULL
+	local TargetDistance = 60000
+
 	if not simfphys.LFS.IgnorePlayers then
 		for _, v in pairs( players ) do
 			if IsValid( v ) then
@@ -1497,17 +1505,21 @@ function ENT:AIGetTarget()
 						if IsValid( Plane ) then
 							if self:CanSee( Plane ) and not Plane:IsDestroyed() and Plane ~= self then
 								local HisTeam = Plane:GetAITEAM()
-								if HisTeam ~= MyTeam or HisTeam == 0 then
-									ClosestTarget = v
-									TargetDistance = Dist
+								if HisTeam ~= 0 then
+									if HisTeam ~= MyTeam or HisTeam == 3 then
+										ClosestTarget = v
+										TargetDistance = Dist
+									end
 								end
 							end
 						else
 							local HisTeam = v:lfsGetAITeam()
 							if v:IsLineOfSightClear( self ) then
-								if HisTeam ~= MyTeam or HisTeam == 0 then
-									ClosestTarget = v
-									TargetDistance = Dist
+								if HisTeam ~= 0 then
+									if HisTeam ~= MyTeam or HisTeam == 3 then
+										ClosestTarget = v
+										TargetDistance = Dist
+									end
 								end
 							end
 						end
@@ -1521,8 +1533,8 @@ function ENT:AIGetTarget()
 		for _, v in pairs( self:AIGetNPCTargets() ) do
 			if IsValid( v ) then
 				local HisTeam = self:AIGetNPCRelationship( v:GetClass() )
-				if HisTeam ~= "-1" then
-					if HisTeam ~= MyTeam or HisTeam == 0 then
+				if HisTeam ~= "0" then
+					if HisTeam ~= MyTeam or HisTeam == 3 then
 						local Dist = (v:GetPos() - MyPos):Length()
 						if Dist < TargetDistance then
 							if self:CanSee( v ) then
@@ -1545,11 +1557,12 @@ function ENT:AIGetTarget()
 			if Dist < TargetDistance and self:AITargetInfront( v, 100 ) then
 				if not v:IsDestroyed() and v.GetAITEAM then
 					local HisTeam = v:GetAITEAM()
-
-					if HisTeam ~= self:GetAITEAM() or HisTeam == 0 then
-						if self:CanSee( v ) then
-							ClosestTarget = v
-							TargetDistance = Dist
+					if HisTeam ~= 0 then
+						if HisTeam ~= self:GetAITEAM() or HisTeam == 3 then
+							if self:CanSee( v ) then
+								ClosestTarget = v
+								TargetDistance = Dist
+							end
 						end
 					end
 				end
