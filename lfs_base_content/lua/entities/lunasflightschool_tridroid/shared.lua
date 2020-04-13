@@ -13,6 +13,14 @@ ENT.AdminSpawnable		= false
 
 ENT.MDL = "models/salza/droidtrifighter.mdl"
 
+ENT.GibModels = {
+	"models/salza/tridroid_gib1.mdl",
+	"models/salza/tridroid_gib2.mdl",
+	"models/salza/tridroid_gib3.mdl",
+	"models/salza/tridroid_gib4.mdl",
+	"models/salza/tridroid_gib5.mdl",
+}
+
 ENT.AITEAM = 1
 
 ENT.Mass = 2000

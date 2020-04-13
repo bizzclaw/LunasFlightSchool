@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 174 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 175)
+simfphys.LFS.VERSION = 175 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 175)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -100,9 +100,15 @@ hook.Add( "OnEntityCreated", "!!!!lfsEntitySorter", function( ent )
 	timer.Simple( FrameTime(), function() 
 		if not IsValid( ent ) then return end
 
-		if ent.LFS then table.insert( simfphys.LFS.PlanesStored, ent ) end
-
 		if isfunction( ent.IsNPC ) and ent.IsNPC() then table.insert( simfphys.LFS.NPCsStored, ent ) end
+
+		if ent.LFS then 
+			table.insert( simfphys.LFS.PlanesStored, ent )
+
+			if SERVER then
+				simfphys.LFS:FixVelocity()
+			end
+		end
 	end )
 end )
 
@@ -381,6 +387,28 @@ if SERVER then
 		if not isstring( name_class ) then return end
 
 		simfphys.LFS.CollisionFilter[ name_class:lower() ] = true
+	end
+
+	function simfphys.LFS:FixVelocity()
+		local tbl = physenv.GetPerformanceSettings()
+
+		if tbl.MaxVelocity < 4000 then
+			local OldVel = tbl.MaxVelocity
+
+			tbl.MaxVelocity = 4000
+			physenv.SetPerformanceSettings(tbl)
+
+			print("[LFS] Low MaxVelocity detected! Increasing! "..OldVel.." => 4000")
+		end
+
+		if tbl.MaxAngularVelocity < 7272 then
+			local OldAngVel = tbl.MaxAngularVelocity
+
+			tbl.MaxAngularVelocity = 7272
+			physenv.SetPerformanceSettings(tbl)
+
+			print("[LFS] Low MaxAngularVelocity detected! Increasing! "..OldAngVel.." => 7272")
+		end
 	end
 
 	hook.Add("CanExitVehicle","!!!lfsCanExitVehicle",function(vehicle,ply)
@@ -1545,7 +1573,7 @@ if CLIENT then
 	timer.Simple(10, function()
 		if not istable( scripted_ents ) or not isfunction( scripted_ents.GetList ) then return end
 		
-		for _, v in pairs( scripted_ents.GetList()  ) do
+		for _, v in pairs( scripted_ents.GetList() ) do
 			if v and istable( v.t ) then
 				if v.t.Spawnable then
 					if v.t.Base and string.StartWith( v.t.Base:lower(), "lunasflightschool_basescript" ) then

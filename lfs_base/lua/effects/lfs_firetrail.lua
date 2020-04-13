@@ -23,7 +23,7 @@ function EFFECT:Init( data )
 	self.Entity = data:GetEntity()
 	self.Scale = data:GetScale()
 	self.DieTime = CurTime() + data:GetMagnitude()
-	self.Pos = data:GetOrigin()
+	self.Pos = data:GetStart()
 	
 	if IsValid( self.Entity ) then
 		self.Emitter = ParticleEmitter( self.Entity:LocalToWorld( self.Pos ), false )

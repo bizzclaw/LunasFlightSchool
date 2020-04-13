@@ -60,14 +60,15 @@ if SERVER then
 					PhysObj:SetVelocityInstantaneous( VectorRand() * math.max(300,self.Vel:Length() / 3) + self.Vel  )
 					PhysObj:AddAngleVelocity( VectorRand() * 500 ) 
 					PhysObj:EnableDrag( false ) 
+
+					local effectdata = EffectData()
+						effectdata:SetOrigin( ent:GetPos() )
+						effectdata:SetStart( PhysObj:GetMassCenter() )
+						effectdata:SetEntity( ent )
+						effectdata:SetScale( math.Rand(0.3,0.7) )
+						effectdata:SetMagnitude( math.Rand(0.5,2.5) )
+					util.Effect( "lfs_firetrail", effectdata )
 				end
-				
-				local effectdata = EffectData()
-					effectdata:SetOrigin( Vector(0,0,0) )
-					effectdata:SetEntity( ent )
-					effectdata:SetScale( math.Rand(0.3,0.7) )
-					effectdata:SetMagnitude( math.Rand(0.5,2.5) )
-				util.Effect( "lfs_firetrail", effectdata )
 				
 				timer.Simple( 4.5 + math.Rand(0,0.5), function()
 					if not IsValid( ent ) then return end
