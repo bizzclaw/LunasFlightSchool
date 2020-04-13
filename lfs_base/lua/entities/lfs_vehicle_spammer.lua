@@ -262,33 +262,27 @@ if CLIENT then
 	function ENT:Draw()
 		self:DrawModel()
 
+		self.NextStep = self.NextStep or 0
+		if self.NextStep < CurTime() then
+			self.NextStep = CurTime() + 0.15
+
+			self.PX = self.PX and self.PX + 125 or 0
+			if self.PX > 1000 then self.PX = 0 end
+		end
+
 		if not self:GetMasterSwitch() then
 			render.SetMaterial( mat )
-
-			local Alpha = math.abs( math.cos( CurTime() * 2 ) )
-
-			for i = -2,2 do
-				render.DrawSprite( self:LocalToWorld( Vector(125,i * 250,10) ), 32, 32, Color( 255 * Alpha, 255 * Alpha, 255 * Alpha, 255 * Alpha) )
-				render.DrawSprite( self:LocalToWorld( Vector(-125,i * 250,10) ), 32, 32, Color( 255 * Alpha, 255 * Alpha, 255 * Alpha, 255 * Alpha) )
-				
-				render.DrawSprite( self:LocalToWorld( Vector(125,i * 250,10) ), 130, 130, Color( 255 * Alpha, 0, 0, 255 * Alpha) )
-				render.DrawSprite( self:LocalToWorld( Vector(-125,i * 250,10) ), 130, 130, Color( 255 * Alpha, 0, 0, 255 * Alpha) )
-			end
-
+			render.DrawSprite( self:LocalToWorld( Vector(125,500 - self.PX,10) ), 32, 32, Color( 255, 255, 255, 255) )
+			render.DrawSprite( self:LocalToWorld( Vector(-125,500 - self.PX,10) ), 32, 32, Color( 255, 255, 255, 255) )
+			
+			render.DrawSprite( self:LocalToWorld( Vector(125,500 - self.PX,10) ), 130, 130, Color( 255, 0, 0, 255) )
+			render.DrawSprite( self:LocalToWorld( Vector(-125,500 - self.PX,10) ), 130, 130, Color( 255, 0, 0, 255) )
+			
 			return
 		end
 
 		if self:GetType() ~= "" then return end
-		
-		self.NextStep = self.NextStep or 0
-		
-		if self.NextStep < CurTime() then
-			self.NextStep = CurTime() + 0.15
-			
-			self.PX = self.PX and self.PX + 125 or 0
-			if self.PX > 1000 then self.PX = 0 end
-		end
-		
+
 		render.SetMaterial( mat )
 		render.DrawSprite( self:LocalToWorld( Vector(125,500 - self.PX,10) ), 32, 32, Color( 255, 255, 255, 255) )
 		render.DrawSprite( self:LocalToWorld( Vector(-125,500 - self.PX,10) ), 32, 32, Color( 255, 255, 255, 255) )
@@ -309,7 +303,7 @@ if CLIENT then
 		local trace = ply:GetEyeTrace()
 		local Dist = (ply:GetShootPos() - trace.HitPos):Length()
 
-		if Dist > 600 then return end
+		if Dist > 800 then return end
 
 		local Ent = trace.Entity
 
@@ -321,7 +315,7 @@ if CLIENT then
 			local Alpha = 255
 
 			if Ent:GetType() == "" then
-				draw.SimpleText( "Hold C => Right Click => Edit Properties => Choose a Type", "LFS_FONT", scr.x, scr.y - 10, Color(255,255,255,Alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+				draw.SimpleText( "Hold C => Right Click on me => Edit Properties => Choose a Type", "LFS_FONT", scr.x, scr.y - 10, Color(255,255,255,Alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 			else
 				if not Ent:GetMasterSwitch() then
 					draw.SimpleText( "Now press USE to enable!", "LFS_FONT", scr.x, scr.y - 10, Color(255,255,255,Alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
