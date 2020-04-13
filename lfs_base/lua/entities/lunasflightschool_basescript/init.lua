@@ -1307,7 +1307,7 @@ function ENT:OnTakeDamage( dmginfo )
 			self:Destroy()
 			
 			self.MaxPerfVelocity = self.MaxPerfVelocity * 10
-			local ExplodeTime = self:IsSpaceShip() and (math.Clamp((self:GetVelocity():Length() - 250) / 500,0.1,6) * math.Rand(0,1)) or (self:GetAI() and 8 or 9999)
+			local ExplodeTime = self:IsSpaceShip() and (math.Clamp((self:GetVelocity():Length() - 250) / 500,1.5,8) * math.Rand(0.2,1)) or (self:GetAI() and 8 or 9999)
 			if self:IsGunship() then ExplodeTime = math.Rand(1,2) end
 
 			local effectdata = EffectData()
