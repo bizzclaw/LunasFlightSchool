@@ -293,7 +293,7 @@ if CLIENT then
 
 	local TutorialDone = false
 
-	hook.Add( "HUDPaint", "!!!!!!!11111", function()
+	hook.Add( "HUDPaint", "!!!!!!!11111lfsvehiclespammer_tutorial", function()
 		if TutorialDone then return end
 
 		local ply = LocalPlayer()
