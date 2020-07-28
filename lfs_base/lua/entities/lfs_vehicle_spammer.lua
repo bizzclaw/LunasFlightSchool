@@ -318,8 +318,11 @@ if CLIENT then
 				draw.SimpleText( "Hold C => Right Click on me => Edit Properties => Choose a Type", "LFS_FONT", scr.x, scr.y - 10, Color(255,255,255,Alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 			else
 				if not Ent:GetMasterSwitch() then
-					draw.SimpleText( "Now press USE to enable!", "LFS_FONT", scr.x, scr.y - 10, Color(255,255,255,Alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
-					draw.SimpleText( "or hold USE to enable globally!", "LFS_FONT", scr.x, scr.y + 10, Color(255,255,255,Alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					local Key = input.LookupBinding( "+use" )
+					if not isstring( Key ) then Key = "+use is not bound to a key" end
+
+					draw.SimpleText( "Now press ["..Key.."] to enable!", "LFS_FONT", scr.x, scr.y - 10, Color(255,255,255,Alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
+					draw.SimpleText( "or hold ["..Key.."] to enable globally!", "LFS_FONT", scr.x, scr.y + 10, Color(255,255,255,Alpha), TEXT_ALIGN_CENTER, TEXT_ALIGN_CENTER )
 				else
 					TutorialDone = true
 				end
