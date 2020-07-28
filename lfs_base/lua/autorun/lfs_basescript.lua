@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 185 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 182)
+simfphys.LFS.VERSION = 186 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 191)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -72,21 +72,25 @@ simfphys.LFS.NotificationVoices = {["RANDOM"] = "0",["LFSORIGINAL"] = "1",["Char
 function simfphys.LFS.CheckUpdates()
 	http.Fetch("https://github.com/Blu-x92/LunasFlightSchool", function(contents,size) 
 		local LatestVersion = tonumber( string.match( contents, "%s*(%d+)\n%s*</span>\n%s*commits" ) ) or 0  -- i took this from acf. I hope they don't mind
-		
-		if simfphys.LFS.GetVersion() >= LatestVersion then
-			print("[LFS] is up to date, Version: "..simfphys.LFS.GetVersion())
+
+		if LatestVersion == 0 then
+			print("[LFS] latest version could not be detected, You have Version: "..simfphys.LFS.GetVersion())
 		else
-			print("[LFS] a newer version is available! Version: "..LatestVersion..", You have Version: "..simfphys.LFS.GetVersion())
-			print("[LFS] get the latest version at https://github.com/Blu-x92/LunasFlightSchool")
-			
-			if CLIENT then 
-				timer.Simple(18, function() 
-					chat.AddText( Color( 255, 0, 0 ), "[LFS] a newer version is available!" )
-					surface.PlaySound( "lfs/notification/ding.ogg" )
-					timer.Simple(0.5, function() 
-						simfphys.LFS.PlayNotificationSound()
-					end )
-				end)
+			if simfphys.LFS.GetVersion() >= LatestVersion then
+				print("[LFS] is up to date, Version: "..simfphys.LFS.GetVersion())
+			else
+				print("[LFS] a newer version is available! Version: "..LatestVersion..", You have Version: "..simfphys.LFS.GetVersion())
+				print("[LFS] get the latest version at https://github.com/Blu-x92/LunasFlightSchool")
+				
+				if CLIENT then 
+					timer.Simple(18, function() 
+						chat.AddText( Color( 255, 0, 0 ), "[LFS] a newer version is available!" )
+						surface.PlaySound( "lfs/notification/ding.ogg" )
+						timer.Simple(0.5, function() 
+							simfphys.LFS.PlayNotificationSound()
+						end )
+					end)
+				end
 			end
 		end
 	end)
