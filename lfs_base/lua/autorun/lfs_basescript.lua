@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 181 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 182)
+simfphys.LFS.VERSION = 185 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 182)
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -992,6 +992,7 @@ if CLIENT then
 		
 		if Parent:GetDriverSeat() ~= Pod then 
 			Parent:LFSHudPaintPassenger( X, Y, ply )
+			PaintPlaneIdentifier( Parent )
 			
 			return
 		end
