@@ -101,6 +101,10 @@ function ENT:GetMaxShield()
 	return isnumber( self.MaxShield ) and self.MaxShield or 0
 end
 
+function ENT:GetShieldPercent()
+	return self:GetShield() / self:GetMaxShield()
+end
+
 function ENT:GetMaxAmmoPrimary()
 	return self.MaxPrimaryAmmo
 end

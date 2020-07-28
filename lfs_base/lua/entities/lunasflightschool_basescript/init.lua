@@ -550,6 +550,7 @@ function ENT:HandleActive()
 		
 		if IsValid( Driver ) then
 			Driver:lfsBuildControls()
+			self:AlignView( Driver )
 		end
 		
 		if Active then
@@ -743,6 +744,17 @@ function ENT:Use( ply )
 	end
 
 	self:SetPassenger( ply )
+end
+
+function ENT:AlignView( ply )
+	if not IsValid( ply ) then return end
+
+	timer.Simple( FrameTime() * 2, function()
+		if not IsValid( ply ) or not IsValid( self ) then return end
+		local Ang = self:GetAngles()
+		Ang.r = 0
+		ply:SetEyeAngles( Ang )
+	end)
 end
 
 function ENT:SetPassenger( ply )
@@ -1278,7 +1290,7 @@ function ENT:OnTakeDamage( dmginfo )
 		self:SetNextShieldRecharge( 3 )
 		
 		if self:GetMaxShield() > 0 and self:GetShield() > 0 then
-			dmginfo:SetDamagePosition( dmgPos + dmgNormal * 250 ) 
+			dmginfo:SetDamagePosition( dmgPos + dmgNormal * 250 * self:GetShieldPercent() )
 
 			local effectdata = EffectData()
 				effectdata:SetOrigin( dmginfo:GetDamagePosition() )
@@ -1307,7 +1319,7 @@ function ENT:OnTakeDamage( dmginfo )
 			self:Destroy()
 			
 			self.MaxPerfVelocity = self.MaxPerfVelocity * 10
-			local ExplodeTime = self:IsSpaceShip() and (math.Clamp((self:GetVelocity():Length() - 250) / 500,1.5,8) * math.Rand(0.2,1)) or (self:GetAI() and 8 or 9999)
+			local ExplodeTime = self:IsSpaceShip() and (math.Clamp((self:GetVelocity():Length() - 250) / 500,1.5,8) * math.Rand(0.2,1)) or (self:GetAI() and 30 or 9999)
 			if self:IsGunship() then ExplodeTime = math.Rand(1,2) end
 
 			local effectdata = EffectData()

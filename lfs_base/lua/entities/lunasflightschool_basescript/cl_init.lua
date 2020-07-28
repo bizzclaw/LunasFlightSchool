@@ -22,7 +22,7 @@ end
 
 function ENT:LFSHudPaintPlaneIdentifier( X, Y, In_Col )
 	surface.SetDrawColor( In_Col.r, In_Col.g, In_Col.b, In_Col.a )
-	
+
 	local Size = 60
 	
 	surface.DrawLine( X - Size, Y + Size, X + Size, Y + Size )
@@ -178,7 +178,7 @@ function ENT:CheckEngineState()
 		local tPer = RPM / LimitRPM
 		
 		local CurDist = (LocalPlayer():GetViewEntity():GetPos() - self:GetPos()):Length()
-		self.PitchOffset = self.PitchOffset and self.PitchOffset + (math.Clamp((CurDist - self.OldDist) * FrameTime() * 300,-40,20 *  tPer) - self.PitchOffset) * FrameTime() * 5 or 0
+		self.PitchOffset = self.PitchOffset and self.PitchOffset + (math.Clamp((CurDist - self.OldDist) / FrameTime() / 125,-40,20 *  tPer) - self.PitchOffset) * FrameTime() * 5 or 0
 		self.OldDist = CurDist
 		
 		local Pitch = (RPM - self:GetIdleRPM()) / (LimitRPM - self:GetIdleRPM())
