@@ -6,7 +6,8 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 186 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 191)
+simfphys.LFS.VERSION = 187 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 191)
+simfphys.LFS.VERSION_TYPE = ".GIT"
 
 simfphys.LFS.KEYS_IN = {}
 simfphys.LFS.KEYS_DEFAULT = {}
@@ -70,8 +71,11 @@ end
 simfphys.LFS.NotificationVoices = {["RANDOM"] = "0",["LFSORIGINAL"] = "1",["Charles"] = "2",["Grace"] = "3",["Darren"] = "4",["Susan"] = "5",["Graham"] = "6",["Peter"] = "7",["Rachel"] = "8",["Gabriel"] = "9",["Gabriella"] = "10",["Rod"] = "11",["Mike"] = "12",["Sharon"] = "13",["Tim"] = "14",["Ryan"] = "15",["Tracy"] = "16",["Amanda"] = "17",["Selene"] = "18",["Audrey"] = "19"}
 
 function simfphys.LFS.CheckUpdates()
-	http.Fetch("https://github.com/Blu-x92/LunasFlightSchool", function(contents,size) 
-		local LatestVersion = tonumber( string.match( contents, "%s*(%d+)\n%s*</span>\n%s*commits" ) ) or 0  -- i took this from acf. I hope they don't mind
+	--http.Fetch("https://github.com/Blu-x92/LunasFlightSchool", function(contents,size) 
+	--local LatestVersion = tonumber( string.match( contents, "%s*(%d+)\n%s*</span>\n%s*commits" ) ) or 0  -- RIP OLD METHOD
+
+	http.Fetch("https://raw.githubusercontent.com/Blu-x92/LunasFlightSchool/master/lfs_base/lua/autorun/lfs_basescript.lua", function(contents,size) 
+		local LatestVersion = tonumber( string.match( string.match( contents, "simfphys.LFS.VERSION%s=%s%d+" ) , "%d+" ) ) or 0
 
 		if LatestVersion == 0 then
 			print("[LFS] latest version could not be detected, You have Version: "..simfphys.LFS.GetVersion())
@@ -86,7 +90,7 @@ function simfphys.LFS.CheckUpdates()
 					timer.Simple(18, function() 
 						chat.AddText( Color( 255, 0, 0 ), "[LFS] a newer version is available!" )
 						surface.PlaySound( "lfs/notification/ding.ogg" )
-						timer.Simple(0.5, function() 
+						timer.Simple(3, function() 
 							simfphys.LFS.PlayNotificationSound()
 						end )
 					end)
@@ -1488,8 +1492,8 @@ if CLIENT then
 				surface.SetDrawColor( 255, 255, 255, 50 )
 				surface.SetMaterial( bgMat )
 				surface.DrawTexturedRect( 0, -50, w, w )
-				
-				draw.DrawText( "v"..simfphys.LFS.GetVersion()..".GIT", "LFS_FONT_PANEL", w - 15, h - 20, Color( 200, 200, 200, 255 ), TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
+
+				draw.DrawText( "v"..simfphys.LFS.GetVersion()..simfphys.LFS.VERSION_TYPE, "LFS_FONT_PANEL", w - 15, h - 20, Color( 200, 200, 200, 255 ), TEXT_ALIGN_RIGHT, TEXT_ALIGN_BOTTOM )
 			end
 			simfphys.LFS.OpenClientSettings( Frame )
 			
