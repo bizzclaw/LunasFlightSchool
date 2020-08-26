@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 187 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 191)
+simfphys.LFS.VERSION = 188 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 191)
 simfphys.LFS.VERSION_TYPE = ".GIT"
 
 simfphys.LFS.KEYS_IN = {}
@@ -931,23 +931,26 @@ if CLIENT then
 						local Dist = (MyPos - rPos):Length()
 
 						if Dist < 13000 then
-							local Alpha = math.max(255 - Dist * 0.015,0)
-							local Team = v:GetAITEAM()
-							local IndicatorColor = Color( 255, 0, 0, Alpha )
+							if not util.TraceLine( {start = ent:GetRotorPos(),endpos = rPos,mask = MASK_NPCWORLDSTATIC,} ).Hit then
 
-							if Team == 0 then
-								IndicatorColor = Color( 0, 255, 0, Alpha )
-							else
-								if Team == 1 or Team == 2 then
-									if Team ~= MyTeam and MyTeam ~= 0 then
-										IndicatorColor = Color( 255, 0, 0, Alpha )
-									else
-										IndicatorColor = Color( 0, 127, 255, Alpha )
+								local Alpha = math.max(255 - Dist * 0.015,0)
+								local Team = v:GetAITEAM()
+								local IndicatorColor = Color( 255, 0, 0, Alpha )
+
+								if Team == 0 then
+									IndicatorColor = Color( 0, 255, 0, Alpha )
+								else
+									if Team == 1 or Team == 2 then
+										if Team ~= MyTeam and MyTeam ~= 0 then
+											IndicatorColor = Color( 255, 0, 0, Alpha )
+										else
+											IndicatorColor = Color( 0, 127, 255, Alpha )
+										end
 									end
 								end
-							end
 
-							ent:LFSHudPaintPlaneIdentifier( Pos.x, Pos.y, IndicatorColor )
+								ent:LFSHudPaintPlaneIdentifier( Pos.x, Pos.y, IndicatorColor )
+							end
 						end
 					end
 				end
