@@ -2,8 +2,12 @@
 simfphys.LFS:PlanesGetAll()  -- gets all LFS planes
 simfphys.LFS.GetVersion() -- gets the current addon version
 
-simfphys.LFS:AddKey( access_name, class, name_menu, key_enum_default, console_command, IN_KEY_ALTERNATIVE) -- register another key. 
+
+simfphys.LFS:AddKey( access_name, class*, name_menu, key_enum_default, console_command, IN_KEY_ALTERNATIVE) -- register another key. 
+*as for now there are only 3 valid classes: "misc", "plane" and "heli"
+
 Example: simfphys.LFS:AddKey( "PRI_ATTACK", "misc", "Primary Attack", MOUSE_LEFT, "cl_lfs_primaryattack", IN_ATTACK)
+
 
 Player:lfsGetPlane()  -- returns the LFSPLANE the player is sitting in
 Player:lfsGetAITeam()  -- gets the AI-team the player is in
@@ -17,7 +21,7 @@ LFSPLANE:GetDriverSeat() -- returns the drivers pod (entity)
 LFSPLANE:GetGunner()  -- returns the gunner if defined (entity)
 LFSPLANE:GetGunnerSeat() -- returns the gunners pod if defined (entity)
 LFSPLANE:GetPassengerSeats() -- returns all passenger seats (table)
-LFSPLANE:GetActive() -- returns true if the vehicle is active. Active does not mean that engine is running (bool)
+LFSPLANE:GetActive() -- returns true if the vehicle is active. Active does not mean that the engine is running (bool)
 LFSPLANE:GetEngineActive() -- returns true if the engine is running (bool)
 
 LFSPLANE:GetAI() -- returns true when the vehicle has AI enabled (bool)
@@ -53,14 +57,19 @@ LFSPLANE:GetWingPos() -- returns the wing pos as world-coordinate (vector)
 LFSPLANE:GetElevatorPos() -- returns the elevator pos as world-coordinate (vector)
 LFSPLANE:GetRudderPos() -- returns the rudder pos as world-coordinate (vector)
 
-LFSPLANE:GetWingUp() -- returns the wing"up" direction (vector)
+LFSPLANE:GetWingUp() -- returns the wing "up" direction (vector)
 LFSPLANE:GetElevatorUp() -- returns the elevator "up" direction (vector)
 LFSPLANE:GetRudderUp() -- returns the rudder "up" direction (vector)
 
 LFSPLANE:GetThrottlePercent() -- returns the percentage (%) of throttle as number
 
 (server)
-Player:lfsSetAITeam( int ) - set players AI-team, valid teams are: 0 = FFA   1 = Bad Guys   2 = Good Guys
+Player:lfsSetAITeam( int ) - set players AI-team, 
+valid teams are:
+	0 = FRIENDLY TO EVERYONE
+	1 = FRIENDLY TO TEAM 1 and 0
+	2 = FRIENDLY TO TEAM 2 and 0
+	3 = HOSTILE TO EVERYONE
 
 LFSPLANE:IsDestroyed() -- returns true if the vehicle is destroyed
 
@@ -73,6 +82,14 @@ LFSPLANE:ToggleLandingGear() -- toggle landing gear
 LFSPLANE:RaiseLandingGear() -- raise landing gear
 LFSPLANE:DeployLandingGear() -- deploy landing gear
 
+LFSPLANE:SetAITEAM( int ) -- set the AI team of the plane, 
+valid teams are:
+	0 = FRIENDLY TO EVERYONE
+	1 = FRIENDLY TO TEAM 1 and 0
+	2 = FRIENDLY TO TEAM 2 and 0
+	3 = HOSTILE TO EVERYONE
+
+
 LFSPLANE:SetHP( float ) -- set the health. Can not be higher than LFSPLANE:GetMaxHP()
 LFSPLANE:SetShield( float ) -- set the shield. Can not be higher than LFSPLANE:GetMaxShield()
 
@@ -82,6 +99,6 @@ LFSPLANE:GetWepEnabled() -- returns true when >100% throttle is allowed
 LFSPLANE:SetAmmoPrimary( int ) -- set primary ammo. Can not be higher than LFSPLANE:GetMaxAmmoPrimary()
 LFSPLANE:SetAmmoSecondary( int ) -- set secondary ammo. Can not be higher than LFSPLANE:GetMaxAmmoSecondary()
 
-LFSPLANE:AddPassengerSeat( Pos, Ang ) -- adds an passenger seat. Pos and Ang is Local to the plane. Function returns the created Pod entity
+LFSPLANE:AddPassengerSeat( Pos, Ang ) -- adds an passenger seat. Pos and Ang is local to the plane. Function returns the created Pod entity
 
 LFSPLANE:IsVtolModeActive() -- returns true when in vtol mode
