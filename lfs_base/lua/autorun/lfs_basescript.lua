@@ -1617,4 +1617,6 @@ cvars.AddChangeCallback( "lfs_ai_ignorenpcs", function( convar, oldValue, newVal
 	simfphys.LFS.IgnoreNPCs = tonumber( newValue ) ~=0
 end)
 
- simfphys.LFS.CheckUpdates()
+hook.Add( "InitPostEntity", "!!!lfscheckupdates", function()
+	timer.Simple(20, function() simfphys.LFS.CheckUpdates() end)
+end )
