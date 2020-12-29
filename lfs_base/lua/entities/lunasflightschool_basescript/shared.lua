@@ -77,12 +77,12 @@ function ENT:SetupDataTables()
 	self:NetworkVar( "Float",3, "RotPitch" )
 	self:NetworkVar( "Float",4, "RotYaw" )
 	self:NetworkVar( "Float",5, "RotRoll" )
-	self:NetworkVar( "Float",6, "HP" )
+	self:NetworkVar( "Float",6, "HP", { KeyName = "health", Edit = { type = "Float", order = 2,min = 0, max = self.MaxHealth, category = "Misc"} } )
 	self:NetworkVar( "Float",7, "Shield" )
 	self:NetworkVar( "Float",8, "MaintenanceProgress" )
 
-	self:NetworkVar( "Int",0, "AmmoPrimary" )
-	self:NetworkVar( "Int",1, "AmmoSecondary" )
+	self:NetworkVar( "Int",0, "AmmoPrimary", { KeyName = "primaryammo", Edit = { type = "Int", order = 3,min = 0, max = self.MaxPrimaryAmmo, category = "Weapons"} } )
+	self:NetworkVar( "Int",1, "AmmoSecondary", { KeyName = "secondaryammo", Edit = { type = "Int", order = 4,min = 0, max = self.MaxSecondaryAmmo, category = "Weapons"} } )
 
 	self:AddDataTables()
 

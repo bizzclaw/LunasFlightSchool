@@ -132,7 +132,7 @@ function simfphys.LFS.CheckUpdates()
 			draw.RoundedBox( 4, 1, 26, w-2, 36, Color( 120, 120, 120, 255 ) )
 			
 			draw.RoundedBox( 8, 0, 0, w, 25, Color( 127, 0, 0, 255 ) )
-			draw.SimpleText( "[LFS] Planes - Notification ", "LFS_FONT", 5, 11, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+			draw.SimpleText( "[LFS] - Notification", "LFS_FONT", 5, 11, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
 			
 			surface.SetDrawColor( 255, 255, 255, 50 )
 			surface.SetMaterial( bgMat )
@@ -1113,10 +1113,10 @@ if CLIENT then
 						local Pos = rPos:ToScreen()
 						local Dist = (MyPos - rPos):Length()
 
-						if Dist < 13000 then
+						if Dist < simfphys.LFS.MaxBulletDistance then
 							if not util.TraceLine( {start = ent:GetRotorPos(),endpos = rPos,mask = MASK_NPCWORLDSTATIC,} ).Hit then
 
-								local Alpha = math.max(255 - Dist * 0.015,0)
+								local Alpha = 255 * (1 - (Dist / simfphys.LFS.MaxBulletDistance) ^ 2)
 								local Team = v:GetAITEAM()
 								local IndicatorColor = Color( 255, 0, 0, Alpha )
 
@@ -1821,4 +1821,8 @@ end)
 
 hook.Add( "InitPostEntity", "!!!lfscheckupdates", function()
 	timer.Simple(20, function() simfphys.LFS.CheckUpdates() end)
+end )
+
+hook.Add( "CanProperty", "!!!!lfsEditPropertiesDisabler", function( ply, property, ent )
+	if ent.LFS and not ply:IsAdmin() and property == "editentity" then return false end
 end )
