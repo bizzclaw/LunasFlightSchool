@@ -20,15 +20,8 @@ function ENT:LFSCalcViewThirdPerson( view, ply )
 	return view
 end
 
-function ENT:LFSHudPaintPlaneIdentifier( X, Y, In_Col )
-	surface.SetDrawColor( In_Col.r, In_Col.g, In_Col.b, In_Col.a )
-
-	local Size = 60
-	
-	surface.DrawLine( X - Size, Y + Size, X + Size, Y + Size )
-	surface.DrawLine( X - Size, Y - Size, X - Size, Y + Size )
-	surface.DrawLine( X + Size, Y - Size, X + Size, Y + Size )
-	surface.DrawLine( X - Size, Y - Size, X + Size, Y - Size )
+function ENT:LFSHudPaintPlaneIdentifier( X, Y, In_Col, target_ent )
+	simfphys.LFS.HudPaintPlaneIdentifier( X, Y, In_Col, target_ent )
 end
 
 function ENT:LFSHudPaintInfoText( X, Y, speed, alt, AmmoPrimary, AmmoSecondary, Throttle )
@@ -89,6 +82,32 @@ function ENT:LFSHudPaintCrosshair( HitPlane, HitPilot )
 	surface.DrawLine( HitPlane.x + 1, HitPlane.y + 11, HitPlane.x + 1, HitPlane.y + 21 ) 
 	surface.DrawLine( HitPlane.x + 1, HitPlane.y - 19, HitPlane.x + 1, HitPlane.y - 16 ) 
 	simfphys.LFS.DrawCircle( HitPilot.x + 1, HitPilot.y + 1, 34 )
+end
+
+local matHealth = Material( "lfs_repairmode_health.png" )
+local matAmmo = Material( "lfs_repairmode_ammo.png" )
+
+function ENT:LFSRepairInfo(ScrW, ScrH, IsRepair, Progress, ShowRepair)
+	local X = ScrW * 0.5
+	local Y = ScrH - 45
+
+	if ShowRepair then
+		simfphys.LFS.DrawArc( X, Y,25,3,0,360,5,Color(0,0,0,50),true)
+		simfphys.LFS.DrawArc( X, Y,25,3,270,270+360*Progress,1,Color(255,255,255,255),true)
+
+		if IsRepair then
+			surface.SetMaterial( matHealth )
+			surface.SetDrawColor( Color(255,255,255,255) )
+			surface.DrawTexturedRect( X - 15, Y - 15, 30, 30 )
+
+			simfphys.LFS.DrawArc( X, Y,20,3,0,360,5,Color(0,0,0,50),true)
+			simfphys.LFS.DrawArc( X, Y,20,3,270,270+360*(self:GetHP()/self:GetMaxHP()),1,Color(255,255,255,255),true)
+		else
+			surface.SetMaterial( matAmmo )
+			surface.SetDrawColor( Color(255,255,255,255) )
+			surface.DrawTexturedRect( X - 15, Y - 15, 30, 30 )
+		end
+	end
 end
 
 function ENT:LFSHudPaintRollIndicator( HitPlane, Enabled )

@@ -2,8 +2,8 @@ ENT.Type            = "anim"
 DEFINE_BASECLASS( "lunasflightschool_basescript" )
 
 ENT.PrintName = "basescript gunship"
-ENT.Author = "Blu"
-ENT.Information = ""
+ENT.Author = "Luna"
+ENT.Information = "Luna's Flight School Gunship Basescript"
 ENT.Category = "[LFS]"
 
 ENT.Spawnable		= false

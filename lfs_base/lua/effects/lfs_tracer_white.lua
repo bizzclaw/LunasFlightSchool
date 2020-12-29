@@ -31,7 +31,7 @@ function EFFECT:Init( data )
 
 	self:SetRenderBoundsWS( self.StartPos, self.EndPos )
 
-	self.TracerTime = math.min( 1, self.StartPos:Distance( self.EndPos ) / 15000 )
+	self.TracerTime = math.min( 1, self.StartPos:Distance( self.EndPos ) / 75000 )
 	self.Length = math.Rand( 0.1, 0.15 )
 
 	-- Die when it reaches its target
@@ -111,7 +111,7 @@ function EFFECT:Render()
 	render.SetMaterial( self.Mat )
 	render.DrawBeam( Pos1,
 		self.EndPos - self.Dir * ( fDelta + sinWave * self.Length ),
-		15, 1, 0, Color( 255, 255, 255, 255 ) )
+		30, 1, 0, Color( 255, 255, 255, 255 ) )
 		
 	render.SetMaterial( self.Mat2 ) 
 	render.DrawSprite( Pos1, 30, 30, Color(255,255,255,255) ) 

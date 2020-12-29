@@ -4,7 +4,7 @@ AddCSLuaFile( "shared.lua" )
 AddCSLuaFile( "cl_init.lua" )
 include("shared.lua")
 
-local function CalcFlight( self )
+function ENT:CalcFlight()
 	if not self:GetEngineActive() or self:IsStartStopping() then return end
 	
 	self:InWater()
@@ -174,7 +174,8 @@ function ENT:Think()
 	self:HandleStart()
 	self:HandleLandingGear()
 	self:HandleWeapons()
-	CalcFlight( self )
+	self:HandleMaintenance()
+	self:CalcFlight()
 	self:PrepExplode()
 	self:RechargeShield()
 	self:OnTick()

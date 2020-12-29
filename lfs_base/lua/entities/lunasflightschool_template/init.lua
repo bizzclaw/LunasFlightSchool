@@ -97,6 +97,16 @@ function ENT:OnKeyThrottle( bPressed )
 end
 
 --[[
+function ENT:OnReloadWeapon()
+	self:EmitSound("lfs/weapons_reload.wav")
+end
+
+function ENT:OnUnloadWeapon()
+	self:EmitSound("weapons/357/357_reload4.wav")
+end
+]]--
+
+--[[
 function ENT:ApplyThrustVtol( PhysObj, vDirection, fForce )
 	PhysObj:ApplyForceOffset( vDirection * fForce,  self:GetElevatorPos() )
 	PhysObj:ApplyForceOffset( vDirection * fForce,  self:GetWingPos() )
@@ -130,3 +140,14 @@ function ENT:OnLandingGearToggled( bOn )
 		--[[ set bodygroup of landing gear up? ]]--
 	end
 end
+
+--[[
+function ENT:OnStartMaintenance()
+	if not self:GetRepairMode() and self:GetAmmoMode() then
+		self:UnloadWeapon()
+	end
+end
+
+function ENT:OnStopMaintenance()
+end
+]]

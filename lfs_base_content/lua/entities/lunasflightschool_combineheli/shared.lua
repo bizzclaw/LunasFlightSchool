@@ -4,8 +4,8 @@ ENT.Type            = "anim"
 DEFINE_BASECLASS( "lunasflightschool_basescript_heli" )
 
 ENT.PrintName = "Combine Helicopter"
-ENT.Author = "Blu"
-ENT.Information = ""
+ENT.Author = "Luna"
+ENT.Information = "Combine Attack Helicopter from Half Life 2 + Episodes"
 ENT.Category = "[LFS]"
 
 ENT.Spawnable		= true
@@ -44,4 +44,4 @@ ENT.RotorRadius = 310
 ENT.MaxHealth = 1600
 
 ENT.MaxPrimaryAmmo = 100
-ENT.MaxSecondaryAmmo = 12
+ENT.MaxSecondaryAmmo = 4

@@ -4,7 +4,7 @@ AddCSLuaFile()
 
 SWEP.Category			= "Other"
 SWEP.PrintName		= "[LFS] Missile Launcher"
-SWEP.Author			= "Blu"
+SWEP.Author			= "Luna"
 SWEP.Slot				= 4
 SWEP.SlotPos			= 9
 SWEP.DrawWeaponInfoBox 	= false
@@ -117,7 +117,7 @@ function SWEP:Think()
 				local dist = sub:Length()
 				local Ang = math.acos( math.Clamp( AimForward:Dot( toEnt ) ,-1,1) ) * (180 / math.pi)
 				
-				if Ang < 30 and dist < 9000 and self:CanSee( v ) then
+				if Ang < 30 and dist < 7500 and self:CanSee( v ) then
 					table.insert( Vehicles, v )
 					
 					local stuff = WorldToLocal( v:GetPos(), Angle(0,0,0), startpos, self.Owner:EyeAngles() + Angle(90,0,0) )
@@ -275,11 +275,58 @@ function SWEP:OwnerChanged()
 	self:StopSounds()
 end
 
+local NextFind = 0
+local AllPlanes = {}
+local function PaintPlaneIdentifier( ply )
+	if NextFind < CurTime() then
+		NextFind = CurTime() + 3
+		AllPlanes = simfphys.LFS:PlanesGetAll()
+	end
+
+	local MyPos = ply:GetPos()
+	local MyTeam = ply:lfsGetAITeam()
+	local startpos = ply:GetShootPos()
+
+	for _, v in pairs( AllPlanes ) do
+		if IsValid( v ) then
+			local rPos = v:LocalToWorld( v:OBBCenter() )
+
+			local Pos = rPos:ToScreen()
+			local Dist = (MyPos - rPos):Length()
+
+			if Dist < 13000 then
+				if not util.TraceLine( {start = startpos,endpos = rPos,mask = MASK_NPCWORLDSTATIC,} ).Hit then
+
+					local Alpha = math.max(255 - Dist * 0.015,0)
+					local Team = v:GetAITEAM()
+					local IndicatorColor = Color( 255, 0, 0, Alpha )
+
+					if Team == 0 then
+						IndicatorColor = Color( 0, 255, 0, Alpha )
+					else
+						if Team == 1 or Team == 2 then
+							if Team ~= MyTeam and MyTeam ~= 0 then
+								IndicatorColor = Color( 255, 0, 0, Alpha )
+							else
+								IndicatorColor = Color( 0, 127, 255, Alpha )
+							end
+						end
+					end
+
+					simfphys.LFS.HudPaintPlaneIdentifier( Pos.x, Pos.y, IndicatorColor, v )
+				end
+			end
+		end
+	end
+end
+
 function SWEP:DrawHUD()
 	local ply = LocalPlayer()
 	
 	if ply:InVehicle() then return end
-	
+
+	PaintPlaneIdentifier( ply )
+
 	local ent = self:GetClosestEnt()
 	
 	if not IsValid( ent ) then return end
@@ -296,12 +343,40 @@ function SWEP:DrawHUD()
 	
 	draw.NoTexture()
 	if self:GetIsLocked() then
-		surface.SetDrawColor( 0, 200, 0, 255 )
+		surface.SetDrawColor( 200, 0, 0, 255 )
 	else
 		surface.SetDrawColor( 200, 200, 200, 255 )
 	end
 	
 	surface.DrawLine( scrW, scrH, X, Y )
-	
-	DrawCircle( X, Y, ent:GetModelRadius() / dist )
+
+	local Size = self:GetIsLocked() and 30 or 60
+
+	surface.DrawLine( X - Size, Y + Size, X - Size * 0.5, Y + Size )
+	surface.DrawLine( X + Size, Y + Size, X + Size * 0.5, Y + Size )
+
+	surface.DrawLine( X - Size, Y + Size, X - Size, Y + Size * 0.5 )
+	surface.DrawLine( X - Size, Y - Size, X - Size, Y - Size * 0.5 )
+
+	surface.DrawLine( X + Size, Y + Size, X + Size, Y + Size * 0.5 )
+	surface.DrawLine( X + Size, Y - Size, X + Size, Y - Size * 0.5 )
+
+	surface.DrawLine( X - Size, Y - Size, X - Size * 0.5, Y - Size )
+	surface.DrawLine( X + Size, Y - Size, X + Size * 0.5, Y - Size )
+
+
+	X = X + 1
+	Y = Y + 1
+	surface.SetDrawColor( 0, 0, 0, 100 )
+	surface.DrawLine( X - Size, Y + Size, X - Size * 0.5, Y + Size )
+	surface.DrawLine( X + Size, Y + Size, X + Size * 0.5, Y + Size )
+
+	surface.DrawLine( X - Size, Y + Size, X - Size, Y + Size * 0.5 )
+	surface.DrawLine( X - Size, Y - Size, X - Size, Y - Size * 0.5 )
+
+	surface.DrawLine( X + Size, Y + Size, X + Size, Y + Size * 0.5 )
+	surface.DrawLine( X + Size, Y - Size, X + Size, Y - Size * 0.5 )
+
+	surface.DrawLine( X - Size, Y - Size, X - Size * 0.5, Y - Size )
+	surface.DrawLine( X + Size, Y - Size, X + Size * 0.5, Y - Size )
 end

@@ -27,6 +27,7 @@ function ENT:Initialize()
 	self:SetUseType( SIMPLE_USE )
 	self:SetRenderMode( RENDERMODE_TRANSALPHA )
 	self:AddFlags( FL_OBJECT ) -- this allows npcs to see this entity
+	self:SetCollisionGroup( COLLISION_GROUP_INTERACTIVE_DEBRIS ) -- No collision combined with limited fire range encourages proper plane combat instead of crashing into each other in a who-can-fly-the-slowest battle
 
 	local PObj = self:GetPhysicsObject()
 
@@ -47,6 +48,51 @@ function ENT:Initialize()
 	self:InitPod()
 	self:InitWheels()
 	self:RunOnSpawn()
+end
+
+function ENT:OnStartMaintenance()
+	if not self:GetRepairMode() and self:GetAmmoMode() then
+		self:UnloadWeapon()
+	end
+end
+
+function ENT:OnStopMaintenance()
+end
+
+function ENT:StartMaintenance()
+	self.MaintenanceStart = CurTime()
+
+	self:OnStartMaintenance()
+end
+
+function ENT:StopMaintenance()
+	self:SetMaintenanceProgress( 0 ) 
+	self.MaintenanceStart = nil
+
+	self:OnStopMaintenance()
+end
+
+function ENT:HandleMaintenance()
+	if not self.MaintenanceStart then return end
+
+	if not self:GetRepairMode() and not self:GetAmmoMode() then self:StopMaintenance() return end
+
+	local Progress = (CurTime() - self.MaintenanceStart) / self.MaintenanceTime
+
+	self:SetMaintenanceProgress( Progress )
+
+	if Progress >= 1 then 
+		if self:GetRepairMode() then
+			self:SetHP( math.min(self:GetHP() + self.MaintenanceRepairAmount,self:GetMaxHP()) )
+			self:EmitSound("items/ammo_pickup.wav")
+
+			self:StartMaintenance()
+
+		else
+			self:ReloadWeapon()
+			self:StopMaintenance()
+		end
+	end
 end
 
 function ENT:RunOnSpawn()
@@ -110,8 +156,30 @@ function ENT:SecondaryAttack()
 end
 
 function ENT:OnReloadWeapon()
+	self:EmitSound("lfs/weapons_reload.wav")
+end
+
+function ENT:OnUnloadWeapon()
+	self:EmitSound("weapons/357/357_reload4.wav")
+end
+
+function ENT:ReloadWeapon()
 	self:SetAmmoPrimary( self:GetMaxAmmoPrimary() )
 	self:SetAmmoSecondary( self:GetMaxAmmoSecondary() )
+
+	self:OnReloadWeapon()
+end
+
+function ENT:UnloadWeapon()
+	if self:GetMaxAmmoPrimary() > 0 then
+		self:SetAmmoPrimary( 0 )
+	end
+
+	if self:GetMaxAmmoSecondary() > 0 then
+		self:SetAmmoSecondary( 0 )
+	end
+
+	self:OnUnloadWeapon()
 end
 
 function ENT:HandleWeapons(Fire1, Fire2)
@@ -143,7 +211,7 @@ function ENT:CalcFlightOverride( Pitch, Yaw, Roll, Stability )
 	return Pitch,Yaw,Roll,Stability,Stability,Stability
 end
 
-local function CalcFlight( self )
+function ENT:CalcFlight()
 	local MaxTurnSpeed = self:GetMaxTurnSpeed()
 	local MaxPitch = MaxTurnSpeed.p
 	local MaxYaw = MaxTurnSpeed.y
@@ -292,25 +360,18 @@ local function CalcFlight( self )
 end
 
 function ENT:Think()
-	
+
 	self:HandleActive()
 	self:HandleStart()
 	self:HandleLandingGear()
 	self:HandleWeapons()
 	self:HandleEngine()
-	CalcFlight( self )
+	self:HandleMaintenance()
+	self:CalcFlight()
 	self:PrepExplode()
 	self:RechargeShield()
 	self:OnTick()
-	
-	if not self.REchecked then
-		self.REchecked = true
-		if isfunction( self.RunEngine ) then
-			print("[LFS]: "..self.PrintName.." ("..self:GetClass()..") is using an outdated LFS-function. Please contact the Creator.")
-			print("Note for Creator: To change Throttle increments use 'ENT.RPMThrottleIncrement' variable instead. More info can be found in the Template. Throttle sounds should be done in 'ENT:OnKeyThrottle( bKeyPressed )'.")
-		end
-	end
-	
+
 	self:NextThink( CurTime() )
 	
 	return true
@@ -507,7 +568,7 @@ end
 
 function ENT:HandleActive()
 	local gPod = self:GetGunnerSeat()
-	
+
 	if IsValid( gPod ) then
 		local Gunner = gPod:GetDriver()
 		
@@ -520,17 +581,17 @@ function ENT:HandleActive()
 			end
 		end
 	end
-	
+
 	local Pod = self:GetDriverSeat()
-	
+
 	if not IsValid( Pod ) then
 		self:SetActive( false )
 		return
 	end
-	
+
 	local Driver = Pod:GetDriver()
 	local Active = self:GetActive()
-	
+
 	if Driver ~= self:GetDriver() then
 		if self:GetlfsLockedStatus() then
 			self:UnLock()
@@ -544,30 +605,30 @@ function ENT:HandleActive()
 				Driver:SetNoDraw( true )
 			end
 		end
-		
+
 		self:SetDriver( Driver )
 		self:SetActive( IsValid( Driver ) )
-		
+
 		if IsValid( Driver ) then
 			Driver:lfsBuildControls()
 			self:AlignView( Driver )
 		end
-		
+
 		if Active then
 			self:EmitSound( "vehicles/atv_ammo_close.wav" )
 		else
 			self:EmitSound( "vehicles/atv_ammo_open.wav" )
 		end
 	end
-	
+
 	local Time = CurTime()
-	
+
 	self.NextSetInertia = self.NextSetInertia or 0
-	
+
 	if self.NextSetInertia < Time then
 		local inea = Active or self:GetEngineActive() or (self:GetStability() > 0.1) or not self:HitGround()
 		local TargetInertia = inea and self.Inertia or self.LFSInertiaDefault
-		
+
 		self.NextSetInertia = Time + 1 -- !!!hack!!! reset every second. There are so many factors that could possibly break this like touching the planes with the physgun which sometimes causes ent:GetInertia() to return a wrong value?!?!
 		
 		local PObj = self:GetPhysicsObject()
@@ -649,8 +710,10 @@ end
 function ENT:ToggleEngine()
 	if self:GetEngineActive() then
 		self:StopEngine()
+		self:StartMaintenance()
 	else
 		self:StartEngine()
+		self:StopMaintenance()
 	end
 end
 
@@ -1258,47 +1321,50 @@ end
 
 function ENT:RechargeShield()
 	local MaxShield = self:GetMaxShield()
-	
+
 	if MaxShield <= 0 then return end
 	if not self:CanRechargeShield() then return end
-	
+
 	local Cur = self:GetShield()
 	local Rate = FrameTime() * 30
-	
+
 	self:SetShield( Cur + math.Clamp(MaxShield - Cur,-Rate,Rate) )
 end
 
 function ENT:TakeShieldDamage( Damage )
 	local Cur = self:GetShield()
 	local New = math.Clamp( Cur - Damage , 0, self:GetMaxShield()  )
-	
+
 	self:SetShield( New )
 end
 
 function ENT:OnTakeDamage( dmginfo )
 	self:TakePhysicsDamage( dmginfo )
-	
+
+	self:StopMaintenance()
+
 	local Damage = dmginfo:GetDamage()
 	local CurHealth = self:GetHP()
 	local NewHealth = math.Clamp( CurHealth - Damage , -self:GetMaxHP(), self:GetMaxHP() )
 	local ShieldCanBlock = dmginfo:IsBulletDamage() or dmginfo:IsDamageType( DMG_AIRBOAT )
-	
+
 	if ShieldCanBlock then
 		local dmgNormal = -dmginfo:GetDamageForce():GetNormalized() 
 		local dmgPos = dmginfo:GetDamagePosition()
-		
+
 		self:SetNextShieldRecharge( 3 )
-		
+
 		if self:GetMaxShield() > 0 and self:GetShield() > 0 then
 			dmginfo:SetDamagePosition( dmgPos + dmgNormal * 250 * self:GetShieldPercent() )
 
 			local effectdata = EffectData()
 				effectdata:SetOrigin( dmginfo:GetDamagePosition() )
+				effectdata:SetEntity( self )
 			util.Effect( "lfs_shield_deflect", effectdata )
 
 			self:TakeShieldDamage( Damage )
 		else
-			sound.Play( Sound( "weapons/fx/rics/ric"..math.random(1,5)..".wav" ), dmgPos, SNDLVL_70dB)
+			sound.Play( Sound( table.Random( {"physics/metal/metal_sheet_impact_bullet2.wav","physics/metal/metal_sheet_impact_hard2.wav","physics/metal/metal_sheet_impact_hard6.wav",} ) ), dmgPos, SNDLVL_70dB)
 	
 			local effectdata = EffectData()
 				effectdata:SetOrigin( dmgPos )
@@ -1315,7 +1381,7 @@ function ENT:OnTakeDamage( dmginfo )
 		if not self:IsDestroyed() then
 			self.FinalAttacker = dmginfo:GetAttacker() 
 			self.FinalInflictor = dmginfo:GetInflictor()
-			
+
 			self:Destroy()
 			
 			self.MaxPerfVelocity = self.MaxPerfVelocity * 10
@@ -1593,26 +1659,26 @@ function ENT:RunAI()
 	local mySpeed = self:GetVelocity():Length()
 	local MinDist = 600 + mySpeed * 2
 	local StartPos = self:GetPos()
-	
+
 	local TraceFilter = {self,self.wheel_L,self.wheel_R,self.wheel_C}
-	
+
 	local FrontLeft = util.TraceLine( { start = StartPos, filter = TraceFilter, endpos = StartPos + self:LocalToWorldAngles( Angle(0,20,0) ):Forward() * RangerLength } )
 	local FrontRight = util.TraceLine( { start = StartPos, filter = TraceFilter, endpos = StartPos + self:LocalToWorldAngles( Angle(0,-20,0) ):Forward() * RangerLength } )
-	
+
 	local FrontLeft2 = util.TraceLine( { start = StartPos, filter = TraceFilter, endpos = StartPos + self:LocalToWorldAngles( Angle(25,65,0) ):Forward() * RangerLength } )
 	local FrontRight2 = util.TraceLine( { start = StartPos, filter = TraceFilter, endpos = StartPos + self:LocalToWorldAngles( Angle(25,-65,0) ):Forward() * RangerLength } )
-	
+
 	local FrontLeft3 = util.TraceLine( { start = StartPos, filter = TraceFilter, endpos = StartPos + self:LocalToWorldAngles( Angle(-25,65,0) ):Forward() * RangerLength } )
 	local FrontRight3 = util.TraceLine( { start = StartPos, filter = TraceFilter, endpos = StartPos + self:LocalToWorldAngles( Angle(-25,-65,0) ):Forward() * RangerLength } )
-	
+
 	local FrontUp = util.TraceLine( { start = StartPos, filter = TraceFilter, endpos = StartPos + self:LocalToWorldAngles( Angle(-20,0,0) ):Forward() * RangerLength } )
 	local FrontDown = util.TraceLine( { start = StartPos, filter = TraceFilter, endpos = StartPos + self:LocalToWorldAngles( Angle(20,0,0) ):Forward() * RangerLength } )
 
 	local Up = util.TraceLine( { start = StartPos, filter = TraceFilter, endpos = StartPos + self:GetUp() * RangerLength } )
 	local Down = util.TraceLine( { start = StartPos, filter = TraceFilter, endpos = StartPos - self:GetUp() * RangerLength } )
-	
+
 	local Down2 = util.TraceLine( { start = self:LocalToWorld( Vector(0,0,100) ), filter = TraceFilter, endpos = StartPos + Vector(0,0,-RangerLength) } )
-	
+
 	local cAvoid = Vector(0,0,0)
 	if istable( self.FoundPlanes ) then
 		local myRadius = self:BoundingRadius() 
@@ -1633,26 +1699,26 @@ function ENT:RunAI()
 			end
 		end
 	end
-	
+
 	local FLp = FrontLeft.HitPos + FrontLeft.HitNormal * MinDist + cAvoid * 8
 	local FRp = FrontRight.HitPos + FrontRight.HitNormal * MinDist + cAvoid * 8
-	
+
 	local FL2p = FrontLeft2.HitPos + FrontLeft2.HitNormal * MinDist
 	local FR2p = FrontRight2.HitPos + FrontRight2.HitNormal * MinDist
-	
+
 	local FL3p = FrontLeft3.HitPos + FrontLeft3.HitNormal * MinDist
 	local FR3p = FrontRight3.HitPos + FrontRight3.HitNormal * MinDist
-	
+
 	local FUp = FrontUp.HitPos + FrontUp.HitNormal * MinDist
 	local FDp = FrontDown.HitPos + FrontDown.HitNormal * MinDist
-	
+
 	local Up = Up.HitPos + Up.HitNormal * MinDist
 	local Dp = Down.HitPos + Down.HitNormal * MinDist
-	
+
 	local TargetPos = (FLp+FRp+FL2p+FR2p+FL3p+FR3p+FUp+FDp+Up+Dp) / 10
-	
+
 	local alt = (self:GetPos() - Down2.HitPos):Length()
-	
+
 	if alt < MinDist then 
 		self.TargetRPM = self:GetMaxRPM()
 		
@@ -1722,15 +1788,15 @@ function ENT:RunAI()
 		end
 		self:RaiseLandingGear()
 	end
-	
+
 	if self:IsDestroyed() or not self:GetEngineActive() then
 		self.TargetRPM = 0
 	end
-	
+
 	self.smTargetPos = self.smTargetPos and self.smTargetPos + (TargetPos - self.smTargetPos) * FrameTime() or self:GetPos()
-	
+
 	local TargetAng = (self.smTargetPos - self:GetPos()):GetNormalized():Angle()
-	
+
 	return TargetAng
 end
 

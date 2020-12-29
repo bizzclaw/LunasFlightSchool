@@ -4,8 +4,8 @@ ENT.Type            = "anim"
 DEFINE_BASECLASS( "lunasflightschool_basescript_heli" )
 
 ENT.PrintName = "Rebel Helicopter"
-ENT.Author = "Blu"
-ENT.Information = ""
+ENT.Author = "Luna"
+ENT.Information = "Transport Helicopter as seen in Half Life 2 Episode 2"
 ENT.Category = "[LFS]"
 
 ENT.Spawnable		= true

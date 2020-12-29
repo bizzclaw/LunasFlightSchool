@@ -3,8 +3,8 @@
 ENT.Type            = "anim"
 
 ENT.PrintName = "basescript"
-ENT.Author = "Blu"
-ENT.Information = ""
+ENT.Author = "Luna"
+ENT.Information = "Luna's Flight School Plane Basescript"
 ENT.Category = "[LFS]"
 
 ENT.Spawnable		= false
@@ -53,12 +53,14 @@ ENT.MaxShield = 0
 ENT.MaxPrimaryAmmo = -1
 ENT.MaxSecondaryAmmo = -1
 
+ENT.MaintenanceTime = 8
+ENT.MaintenanceRepairAmount = 250
+
 function ENT:SetupDataTables()
 	self:NetworkVar( "Entity",0, "Driver" )
 	self:NetworkVar( "Entity",1, "DriverSeat" )
 	self:NetworkVar( "Entity",2, "Gunner" )
 	self:NetworkVar( "Entity",3, "GunnerSeat" )
-	self:NetworkVar( "Entity",4, "LockOnEnt" )
 	
 	self:NetworkVar( "Bool",0, "Active" )
 	self:NetworkVar( "Bool",1, "EngineActive" )
@@ -75,12 +77,14 @@ function ENT:SetupDataTables()
 	self:NetworkVar( "Float",3, "RotPitch" )
 	self:NetworkVar( "Float",4, "RotYaw" )
 	self:NetworkVar( "Float",5, "RotRoll" )
-	self:NetworkVar( "Float",6, "HP", { KeyName = "health", Edit = { type = "Float", order = 2,min = 0, max = self.MaxHealth, category = "Misc"} } )
-	
+	self:NetworkVar( "Float",6, "HP" )
 	self:NetworkVar( "Float",7, "Shield" )
-	
-	self:NetworkVar( "Int",0, "AmmoPrimary", { KeyName = "primaryammo", Edit = { type = "Int", order = 3,min = 0, max = self.MaxPrimaryAmmo, category = "Weapons"} } )
-	self:NetworkVar( "Int",1, "AmmoSecondary", { KeyName = "secondaryammo", Edit = { type = "Int", order = 4,min = 0, max = self.MaxSecondaryAmmo, category = "Weapons"} } )
+	self:NetworkVar( "Float",8, "MaintenanceProgress" )
+
+	self:NetworkVar( "Int",0, "AmmoPrimary" )
+	self:NetworkVar( "Int",1, "AmmoSecondary" )
+
+	self:AddDataTables()
 
 	if SERVER then
 		self:NetworkVarNotify( "AI", self.OnToggleAI )
@@ -88,10 +92,8 @@ function ENT:SetupDataTables()
 		self:SetAITEAM( self.AITEAM )
 		self:SetHP( self.MaxHealth )
 		self:SetShield( self.MaxShield )
-		self:OnReloadWeapon()
+		self:ReloadWeapon()
 	end
-	
-	self:AddDataTables()
 end
 
 function ENT:AddDataTables()
@@ -202,6 +204,14 @@ end
 
 function ENT:IsHelicopter()
 	return false
+end
+
+function ENT:GetRepairMode()
+	return self:GetHP() < self.MaxHealth 
+end
+
+function ENT:GetAmmoMode()
+	return (self:GetAmmoPrimary() ~= self:GetMaxAmmoPrimary()) or (self:GetAmmoSecondary() ~= self:GetMaxAmmoSecondary())
 end
 
 function ENT:GetPassengerSeats()

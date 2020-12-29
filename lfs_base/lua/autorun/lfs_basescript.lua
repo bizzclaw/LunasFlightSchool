@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 188 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 191)
+simfphys.LFS.VERSION = 190 -- note to self: Workshop is 5-version increments ahead. (next workshop update at 191)
 simfphys.LFS.VERSION_TYPE = ".GIT"
 
 simfphys.LFS.KEYS_IN = {}
@@ -27,6 +27,19 @@ simfphys.LFS.IgnorePlayers = cVar_playerignore and cVar_playerignore:GetBool() o
 
 simfphys.LFS.pSwitchKeys = {[KEY_1] = 1,[KEY_2] = 2,[KEY_3] = 3,[KEY_4] = 4,[KEY_5] = 5,[KEY_6] = 6,[KEY_7] = 7,[KEY_8] = 8,[KEY_9] = 9,[KEY_0] = 10}
 simfphys.LFS.pSwitchKeysInv = {[1] = KEY_1,[2] = KEY_2,[3] = KEY_3,[4] = KEY_4,[5] = KEY_5,[6] = KEY_6,[7] = KEY_7,[8] = KEY_8,[9] = KEY_9,[10] = KEY_0}
+
+simfphys.LFS.MaxBulletDistance = 6000
+simfphys.LFS.BulletMaxRange = CreateConVar( "lfs_bullet_maxrange", "6000", {FCVAR_REPLICATED , FCVAR_ARCHIVE},"set default player ai-team" )
+
+local EntityMeta = FindMetaTable("Entity")
+local OldFireBullets = EntityMeta.FireBullets
+function EntityMeta:FireBullets( bulletInfo, suppressHostEvents )
+	if self.LFS then
+		bulletInfo.Distance = math.min( (bulletInfo.Distance or simfphys.LFS.MaxBulletDistance), simfphys.LFS.MaxBulletDistance )
+	end
+
+	OldFireBullets( self, bulletInfo, suppressHostEvents )
+end
 
 function simfphys.LFS:AddKey(name, class, name_menu, default, cmd, IN_KEY)
 	table.insert( simfphys.LFS.KEYS_DEFAULT, {name = name, class = class, name_menu = name_menu, default = default, cmd = cmd, IN_KEY = IN_KEY} )
@@ -98,6 +111,59 @@ function simfphys.LFS.CheckUpdates()
 			end
 		end
 	end)
+
+	if SERVER then return end
+
+	if not LFS_1878568737 then
+		if file.Exists( "lfs_dontnotifyme.txt", "DATA" ) then return end
+
+		local bgMat = Material( "lfs_controlpanel_bg.png" )
+
+		local InfoFrame = vgui.Create( "DFrame" )
+		InfoFrame:SetSize( 345, 120 )
+		InfoFrame:SetTitle( "" )
+		InfoFrame:SetDraggable( true )
+		InfoFrame:MakePopup()
+		InfoFrame:Center()
+		InfoFrame.Paint = function(self, w, h )
+			draw.RoundedBox( 8, 0, 0, w, h, Color( 0, 0, 0, 255 ) )
+			draw.RoundedBox( 8, 1, 46, w-2, h-47, Color( 120, 120, 120, 255 ) )
+
+			draw.RoundedBox( 4, 1, 26, w-2, 36, Color( 120, 120, 120, 255 ) )
+			
+			draw.RoundedBox( 8, 0, 0, w, 25, Color( 127, 0, 0, 255 ) )
+			draw.SimpleText( "[LFS] Planes - Notification ", "LFS_FONT", 5, 11, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
+			
+			surface.SetDrawColor( 255, 255, 255, 50 )
+			surface.SetMaterial( bgMat )
+			surface.DrawTexturedRect( 0, -50, w, w )
+
+			draw.DrawText( "Due to ongoing complaints about filesize,", "LFS_FONT_PANEL", 10, 30, Color( 255, 170, 170, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+			draw.DrawText( "STAR WARS vehicles are NO LONGER PART OF THE BASE ADDON!", "LFS_FONT_PANEL", 10, 45, Color( 255, 170, 170, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+			draw.DrawText( "If you still want to use them", "LFS_FONT_PANEL", 10, 67, Color( 255, 170, 170, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+		end
+
+		local DermaButton = vgui.Create( "DButton", InfoFrame )
+		DermaButton:SetText( "" )
+		DermaButton:SetPos( 150, 63 )
+		DermaButton:SetSize( 150, 20 )
+		DermaButton.DoClick = function() steamworks.ViewFile( "1878568737" ) end
+		DermaButton.Paint = function(self, w, h ) 
+			draw.DrawText( "CLICK HERE", "LFS_FONT", 0, 0, Color( 255, 255, 255, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
+		end
+
+		local CheckBox = vgui.Create( "DCheckBoxLabel", InfoFrame )
+		CheckBox:SetText( "OK, don't show me this message ever again." )
+		CheckBox:SizeToContents()
+		CheckBox:SetPos( 10, 95 )
+		CheckBox.OnChange = function(self, bVal)
+			if bVal then
+				surface.PlaySound( "buttons/button14.wav" )
+				InfoFrame:Close()
+				file.Write( "lfs_dontnotifyme.txt", "[LFS] - Star Wars Pack Notification suppressing file." )
+			end
+		end
+	end
 end
 
 function simfphys.LFS.GetVersion()
@@ -314,14 +380,7 @@ end
 
 if SERVER then 
 	resource.AddWorkshop("1571918906")
-	
-	-- No longer required with the new and more reliable workshop format (should be)
-	--resource.AddSingleFile( "materials/effects/lfs_base/spark.vmt" ) 
-	--resource.AddSingleFile( "materials/effects/lfs_base/spark.vtf" ) 
-	--resource.AddSingleFile( "materials/effects/lfs_base/spark_brightness.vtf" ) 
-	--resource.AddSingleFile( "materials/lfs_locked.png" )
-	--resource.AddSingleFile( "materials/lfs_controlpanel_bg.png" )
-	
+
 	util.AddNetworkString( "lfs_failstartnotify" )
 	util.AddNetworkString( "lfs_admin_setconvar" )
 	util.AddNetworkString( "lfs_player_request_filter" )
@@ -648,7 +707,73 @@ if CLIENT then
 	local ShowShowRollIndic = cvarShowRollIndic and cvarShowRollIndic:GetBool() or false
 	
 	simfphys.LFS.AltitudeMinZ = 0
-	
+
+	local function PrecacheArc(cx,cy,radius,thickness,startang,endang,roughness,bClockwise)
+		local triarc = {}
+		local deg2rad = math.pi / 180
+
+		local startang,endang = startang or 0, endang or 0
+		if bClockwise and (startang < endang) then
+			local temp = startang
+			startang = endang
+			endang = temp
+			temp = nil
+		elseif (startang > endang) then 
+			local temp = startang
+			startang = endang
+			endang = temp
+			temp = nil
+		end
+
+		local roughness = math.max(roughness or 1, 1)
+		local step = roughness
+		if bClockwise then
+			step = math.abs(roughness) * -1
+		end
+
+		local inner = {}
+		local r = radius - thickness
+		for deg=startang, endang, step do
+			local rad = deg2rad * deg
+			table.insert(inner, {
+				x=cx+(math.cos(rad)*r),
+				y=cy+(math.sin(rad)*r)
+			})
+		end
+
+		local outer = {}
+		for deg=startang, endang, step do
+			local rad = deg2rad * deg
+			table.insert(outer, {
+				x=cx+(math.cos(rad)*radius),
+				y=cy+(math.sin(rad)*radius)
+			})
+		end
+
+		for tri=1,#inner*2 do
+			local p1,p2,p3
+			p1 = outer[math.floor(tri/2)+1]
+			p3 = inner[math.floor((tri+1)/2)+1]
+			if tri%2 == 0 then
+				p2 = outer[math.floor((tri+1)/2)]
+			else
+				p2 = inner[math.floor((tri+1)/2)]
+			end
+		
+			table.insert(triarc, {p1,p2,p3})
+		end
+		return triarc
+	end
+
+	function simfphys.LFS.DrawArc(cx,cy,radius,thickness,startang,endang,roughness,color,bClockwise)
+		surface.SetDrawColor(color)
+		draw.NoTexture()
+
+		for k,v in ipairs( PrecacheArc(cx,cy,radius,thickness,startang,endang,roughness,bClockwise) ) do
+			surface.DrawPoly(v)
+		end
+	end
+
 	function simfphys.LFS.DrawCircle( X, Y, radius )
 		local segmentdist = 360 / ( 2 * math.pi * radius / 2 )
 		
@@ -656,7 +781,39 @@ if CLIENT then
 			surface.DrawLine( X + math.cos( math.rad( a ) ) * radius, Y - math.sin( math.rad( a ) ) * radius, X + math.cos( math.rad( a + segmentdist ) ) * radius, Y - math.sin( math.rad( a + segmentdist ) ) * radius )
 		end
 	end
-	
+
+	function simfphys.LFS.DrawDiamond( X, Y, radius, perc )
+		if perc <= 0 then return end
+
+		local segmentdist = 90
+
+		draw.NoTexture()
+
+		for a = 90, 360, segmentdist do
+			local Xa = math.Round( math.sin( math.rad( -a ) ) * radius, 0 )
+			local Ya = math.Round( math.cos( math.rad( -a ) ) * radius, 0 )
+
+			local C = math.sqrt( radius ^ 2 + radius ^ 2 )
+
+			if a == 90 then
+				C = C * math.min(math.max(perc - 0.75,0) / 0.25,1)
+			elseif a == 180 then
+				C = C * math.min(math.max(perc - 0.5,0) / 0.25,1)
+			elseif a == 270 then
+				C = C * math.min(math.max(perc - 0.25,0) / 0.25,1)
+			elseif a == 360 then
+				C = C * math.min(math.max(perc,0) / 0.25,1)
+			end
+
+			if C > 0 then
+				local AxisMoveX = math.Round( math.sin( math.rad( -a + 135) ) * (C + 3) * 0.5, 0 )
+				local AxisMoveY =math.Round( math.cos( math.rad( -a + 135) ) * (C + 3) * 0.5, 0 )
+
+				surface.DrawTexturedRectRotated(X - Xa - AxisMoveX, Y - Ya - AxisMoveY,3, math.ceil( C ), a - 45)
+			end
+		end
+	end
+
 	function simfphys.LFS.PlayNotificationSound()
 		local soundfile = simfphys.LFS.NotificationVoices[GetConVar( "lfs_notification_voice" ):GetString()]
 
@@ -697,7 +854,12 @@ if CLIENT then
 		view.fov = fov
 		view.drawviewer = true
 		view.angles = (Parent:GetForward() * (1 + cvarFocus) * smTran * 0.8 + ply:EyeAngles():Forward() * math.max(1 - cvarFocus, 1 - smTran)):Angle()
-		view.angles.r = 0
+
+		if cvarFocus >= 1 then
+			view.angles = Parent:GetAngles()
+		else
+			view.angles.r = 0
+		end
 		
 		if Parent:GetDriverSeat() ~= Pod then
 			view.angles = ply:EyeAngles()
@@ -792,6 +954,26 @@ if CLIENT then
 		outline = false,
 	} )
 
+	function simfphys.LFS.HudPaintPlaneIdentifier( X, Y, In_Col, target_ent )
+		if not IsValid( target_ent ) then return end
+
+		surface.SetDrawColor( In_Col.r, In_Col.g, In_Col.b, In_Col.a )
+		simfphys.LFS.DrawDiamond( X + 1, Y + 1, 20, target_ent:GetHP() / target_ent:GetMaxHP() )
+
+		if target_ent:GetMaxShield() > 0 then
+			surface.SetDrawColor( 200, 200, 255, 255 )
+			simfphys.LFS.DrawDiamond( X + 1, Y + 1, 24, target_ent:GetShield() / target_ent:GetMaxShield() )
+		end
+
+		--[[ old style
+		local Size = 60
+		
+		surface.DrawLine( X - Size, Y + Size, X + Size, Y + Size )
+		surface.DrawLine( X - Size, Y - Size, X - Size, Y + Size )
+		surface.DrawLine( X + Size, Y - Size, X + Size, Y + Size )
+		surface.DrawLine( X - Size, Y - Size, X + Size, Y - Size )
+		]]
+	end
 
 	local function PaintPlaneHud( ent, X, Y, ply )
 		if not IsValid( ent ) then return end
@@ -809,8 +991,11 @@ if CLIENT then
 		local AmmoPrimary = ent:GetAmmoPrimary()
 		local AmmoSecondary = ent:GetAmmoSecondary()
 
+		local RepairProgress = ent:GetMaintenanceProgress()
+
 		ent:LFSHudPaintInfoText( X, Y, speed, alt, AmmoPrimary, AmmoSecondary, Throttle )
 		ent:LFSHudPaint( X, Y, {speed = speed, altitude = alt, PrimaryAmmo = AmmoPrimary, SecondaryAmmo = AmmoSecondary, Throttle = Throttle}, ply )
+		ent:LFSRepairInfo( X, Y, ent:GetRepairMode(), RepairProgress, RepairProgress > 0 and RepairProgress < 1 )
 	end
 
 	local LockText = Material( "lfs_locked.png" )
@@ -947,7 +1132,7 @@ if CLIENT then
 									end
 								end
 
-								ent:LFSHudPaintPlaneIdentifier( Pos.x, Pos.y, IndicatorColor )
+								ent:LFSHudPaintPlaneIdentifier( Pos.x, Pos.y, IndicatorColor, v )
 							end
 						end
 					end
@@ -998,7 +1183,7 @@ if CLIENT then
 		local Y = ScrH()
 		
 		PaintSeatSwitcher( Parent, X, Y )
-		
+
 		if Parent:GetDriverSeat() ~= Pod then 
 			Parent:LFSHudPaintPassenger( X, Y, ply )
 			PaintPlaneIdentifier( Parent )
@@ -1056,14 +1241,14 @@ if CLIENT then
 		Parent:LFSHudPaintCrosshair( HitPlane, HitPilot )
 		Parent:LFSHudPaintRollIndicator( HitPlane, ShowShowRollIndic )
 	end )
-	
+
 	local Frame
 	local bgMat = Material( "lfs_controlpanel_bg.png" )
 	local adminMat = Material( "icon16/shield.png" )
 	local soundPreviewMat = Material( "materials/icon16/sound.png" )
-	
+
 	local IsClientSelected = true
-	
+
 	function simfphys.LFS.OpenClientSettings( Frame )
 		IsClientSelected = true
 		
@@ -1163,7 +1348,7 @@ if CLIENT then
 			end
 		end
 	end
-	
+
 	function simfphys.LFS.OpenControlSettings( Frame )
 		IsClientSelected = true
 		
@@ -1393,7 +1578,7 @@ if CLIENT then
 			end
 		end
 	end
-	
+
 	function simfphys.LFS.OpenServerSettings( Frame )
 		IsClientSelected = false
 		
@@ -1464,9 +1649,24 @@ if CLIENT then
 					net.WriteString( tostring( val and 1 or 0 ) )
 				net.SendToServer()
 			end
+
+			local slider = vgui.Create( "DNumSlider", DPanel )
+			slider:SetPos( 20, 130 )
+			slider:SetSize( 300, 20 )
+			slider:SetText( "HitScan Max Range" )
+			slider:SetMin( 1500 )
+			slider:SetMax( 56756 )
+			slider:SetDecimals( 0 )
+			slider:SetConVar( "lfs_bullet_maxrange" )
+			function slider:OnValueChanged( val )
+				net.Start("lfs_admin_setconvar")
+					net.WriteString( "lfs_bullet_maxrange" )
+					net.WriteString( tostring( val ) )
+				net.SendToServer()
+			end
 		end
 	end
-	
+
 	local function OpenMenu()
 		if not IsValid( Frame ) then
 			Frame = vgui.Create( "DFrame" )
@@ -1543,7 +1743,7 @@ if CLIENT then
 			end
 		end
 	end
-	
+
 	local LFSSoundList = {}
 	hook.Add( "EntityEmitSound", "!!!lfs_volumemanager", function( t )
 		if t.Entity.LFS then
@@ -1577,9 +1777,9 @@ if CLIENT then
 			OpenMenu()
 		end
 	} )
-	
+
 	concommand.Add( "lfs_openmenu", function( ply, cmd, args ) OpenMenu() end )
-	
+
 	timer.Simple(10, function()
 		if not istable( scripted_ents ) or not isfunction( scripted_ents.GetList ) then return end
 		
@@ -1597,11 +1797,11 @@ if CLIENT then
 			end
 		end
 	end)
-	
+
 	cvars.AddChangeCallback( "lfs_show_identifier", function( convar, oldValue, newValue ) 
 		ShowPlaneIdent = tonumber( newValue ) ~=0
 	end)
-	
+
 	cvars.AddChangeCallback( "lfs_show_rollindicator", function( convar, oldValue, newValue ) 
 		ShowShowRollIndic = tonumber( newValue ) ~=0
 	end)
@@ -1613,6 +1813,10 @@ end)
 
 cvars.AddChangeCallback( "lfs_ai_ignorenpcs", function( convar, oldValue, newValue ) 
 	simfphys.LFS.IgnoreNPCs = tonumber( newValue ) ~=0
+end)
+
+cvars.AddChangeCallback( "lfs_bullet_maxrange", function( convar, oldValue, newValue ) 
+	simfphys.LFS.MaxBulletDistance = tonumber( newValue )
 end)
 
 hook.Add( "InitPostEntity", "!!!lfscheckupdates", function()

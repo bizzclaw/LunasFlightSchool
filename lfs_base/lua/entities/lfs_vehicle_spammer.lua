@@ -5,8 +5,8 @@ AddCSLuaFile()
 ENT.Type            = "anim"
 
 ENT.PrintName = "AI Vehicle Spammer"
-ENT.Author = ""
-ENT.Information = ""
+ENT.Author = "Luna"
+ENT.Information = "AI Vehicle Spawner. Spammer in the hands of a Minge."
 ENT.Category = "[LFS]"
 
 ENT.Spawnable		= true
@@ -22,7 +22,7 @@ function ENT:SetupDataTables()
 			if v.t.Spawnable then
 				if v.t.Base and string.StartWith( v.t.Base:lower(), "lunasflightschool_basescript" ) then
 					if v.t.Category and v.t.PrintName then
-						local nicename = v.t.Category.." "..v.t.PrintName
+						local nicename = v.t.Category.." - "..v.t.PrintName
 						if not table.HasValue( SpawnOptions, nicename ) then
 							SpawnOptions[nicename] = v.t.ClassName
 						end

@@ -1,6 +1,7 @@
 --DO NOT EDIT OR REUPLOAD THIS FILE
 
 function EFFECT:Init( data )
+	self.Ent = data:GetEntity()
 	self.Pos = data:GetOrigin()
 	
 	self.mat = Material( "sprites/light_glow02_add" )
@@ -11,6 +12,17 @@ function EFFECT:Init( data )
 	sound.Play( "lfs/shield_deflect.ogg", self.Pos, 120, 100, 1 )
 	
 	self:Spark( self.Pos )
+
+	if IsValid( self.Ent ) then
+		self.Model = ClientsideModel( self.Ent:GetModel(), RENDERMODE_TRANSCOLOR )
+		self.Model:SetMaterial("models/alyx/emptool_glow")
+		self.Model:SetColor( Color(200,220,255,255) )
+		self.Model:SetParent( self.Ent, 0 )
+		self.Model:SetMoveType( MOVETYPE_NONE )
+		self.Model:SetLocalPos( Vector( 0, 0, 0 ) )
+		self.Model:SetLocalAngles( Angle( 0, 0, 0 ) )
+		self.Model:AddEffects( EF_BONEMERGE )
+	end
 end
 
 function EFFECT:Spark( pos )
@@ -41,7 +53,19 @@ function EFFECT:Spark( pos )
 end
 
 function EFFECT:Think()
-	if self.DieTime < CurTime() then return false end
+	if not IsValid( self.Ent ) then
+		if IsValid( self.Model ) then
+			self.Model:Remove()
+		end
+	end
+
+	if self.DieTime < CurTime() then 
+		if IsValid( self.Model ) then
+			self.Model:Remove()
+		end
+
+		return false
+	end
 	
 	return true
 end

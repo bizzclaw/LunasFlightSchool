@@ -4,8 +4,8 @@ ENT.Type            = "anim"
 DEFINE_BASECLASS( "lunasflightschool_basescript" )
 
 ENT.PrintName = "Cessna 172"
-ENT.Author = "Blu"
-ENT.Information = ""
+ENT.Author = "Luna"
+ENT.Information = "Small and Unarmed Civilian Airplane"
 ENT.Category = "[LFS]"
 
 ENT.Spawnable		= true

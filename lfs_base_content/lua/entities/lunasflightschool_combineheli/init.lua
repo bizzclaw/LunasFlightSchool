@@ -106,7 +106,7 @@ end
 function ENT:SecondaryAttack()
 	if not self:CanSecondaryAttack() then return end
 	
-	self:SetNextSecondary( 0.2 )
+	self:SetNextSecondary( 0.25 )
 	
 	self:EmitSound("npc/waste_scanner/grenade_fire.wav")
 	
@@ -219,12 +219,9 @@ function ENT:HandleWeapons(Fire1, Fire2)
 			self:SetAmmoPrimary( math.max( self.charge, 0 ) )
 		end
 	end
-	
-	if self.OldFire2 ~= Fire2 then
-		if Fire2 then
-			self:SecondaryAttack()
-		end
-		self.OldFire2 = Fire2
+
+	if Fire2 then
+		self:SecondaryAttack()
 	end
 	
 	self.OldFire = self.OldFire or false
