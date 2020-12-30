@@ -6,7 +6,7 @@ local meta = FindMetaTable( "Player" )
 simfphys = istable( simfphys ) and simfphys or {} -- lets check if the simfphys table exists. if not, create it!
 simfphys.LFS = {} -- lets add another table for this project. We will be storing all our global functions and variables here. LFS means LunasFlightSchool
 
-simfphys.LFS.VERSION = 192 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 202)
+simfphys.LFS.VERSION = 193 -- note to self: Workshop is 10-version increments ahead. (next workshop update at 202)
 simfphys.LFS.VERSION_TYPE = ".GIT"
 
 simfphys.LFS.KEYS_IN = {}
@@ -28,8 +28,8 @@ simfphys.LFS.IgnorePlayers = cVar_playerignore and cVar_playerignore:GetBool() o
 simfphys.LFS.pSwitchKeys = {[KEY_1] = 1,[KEY_2] = 2,[KEY_3] = 3,[KEY_4] = 4,[KEY_5] = 5,[KEY_6] = 6,[KEY_7] = 7,[KEY_8] = 8,[KEY_9] = 9,[KEY_0] = 10}
 simfphys.LFS.pSwitchKeysInv = {[1] = KEY_1,[2] = KEY_2,[3] = KEY_3,[4] = KEY_4,[5] = KEY_5,[6] = KEY_6,[7] = KEY_7,[8] = KEY_8,[9] = KEY_9,[10] = KEY_0}
 
-simfphys.LFS.MaxBulletDistance = 6000
-simfphys.LFS.BulletMaxRange = CreateConVar( "lfs_bullet_maxrange", "6000", {FCVAR_REPLICATED , FCVAR_ARCHIVE},"set default player ai-team" )
+simfphys.LFS.MaxBulletDistance = 7500
+simfphys.LFS.BulletMaxRange = CreateConVar( "lfs_bullet_max_range", "7500", {FCVAR_REPLICATED , FCVAR_ARCHIVE},"set default player ai-team" )
 
 local EntityMeta = FindMetaTable("Entity")
 local OldFireBullets = EntityMeta.FireBullets
@@ -856,7 +856,7 @@ if CLIENT then
 		view.angles = (Parent:GetForward() * (1 + cvarFocus) * smTran * 0.8 + ply:EyeAngles():Forward() * math.max(1 - cvarFocus, 1 - smTran)):Angle()
 
 		if cvarFocus >= 1 then
-			view.angles = Parent:GetAngles()
+			view.angles = LerpAngle( smTran, ply:EyeAngles(), Parent:GetAngles() )
 		else
 			view.angles.r = 0
 		end
@@ -1113,10 +1113,10 @@ if CLIENT then
 						local Pos = rPos:ToScreen()
 						local Dist = (MyPos - rPos):Length()
 
-						if Dist < simfphys.LFS.MaxBulletDistance then
+						if Dist < 10000 then
 							if not util.TraceLine( {start = ent:GetRotorPos(),endpos = rPos,mask = MASK_NPCWORLDSTATIC,} ).Hit then
 
-								local Alpha = 255 * (1 - (Dist / simfphys.LFS.MaxBulletDistance) ^ 2)
+								local Alpha = 255 * (1 - (Dist / 10000) ^ 2)
 								local Team = v:GetAITEAM()
 								local IndicatorColor = Color( 255, 0, 0, Alpha )
 
@@ -1657,10 +1657,10 @@ if CLIENT then
 			slider:SetMin( 1500 )
 			slider:SetMax( 56756 )
 			slider:SetDecimals( 0 )
-			slider:SetConVar( "lfs_bullet_maxrange" )
+			slider:SetConVar( "lfs_bullet_max_range" )
 			function slider:OnValueChanged( val )
 				net.Start("lfs_admin_setconvar")
-					net.WriteString( "lfs_bullet_maxrange" )
+					net.WriteString( "lfs_bullet_max_range" )
 					net.WriteString( tostring( val ) )
 				net.SendToServer()
 			end
@@ -1815,7 +1815,7 @@ cvars.AddChangeCallback( "lfs_ai_ignorenpcs", function( convar, oldValue, newVal
 	simfphys.LFS.IgnoreNPCs = tonumber( newValue ) ~=0
 end)
 
-cvars.AddChangeCallback( "lfs_bullet_maxrange", function( convar, oldValue, newValue ) 
+cvars.AddChangeCallback( "lfs_bullet_max_range", function( convar, oldValue, newValue ) 
 	simfphys.LFS.MaxBulletDistance = tonumber( newValue )
 end)
 

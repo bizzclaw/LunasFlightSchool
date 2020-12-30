@@ -442,21 +442,23 @@ end
 function ENT:ToggleEngine()
 	if self:GetEngineActive() then
 		self:CalcEngineStop( true )
+		self:StartMaintenance()
 	else
 		if self:IsEngineStartAllowed() and not self:IsDestroyed() and not self:InWater() and not self:GetRotorDestroyed() then
 			self:CalcEngineStart( true )
+			self:StopMaintenance()
 		end
 	end
 end
 
 function ENT:StartEngine()
 	if self:GetEngineActive() or self:IsDestroyed() or self:InWater() or self:GetRotorDestroyed() then return end
-	
+
 	self:SetEngineActive( true )
 	self:OnEngineStarted()
 
 	local RotorWash = ents.Create( "env_rotorwash_emitter" )
-	
+
 	if IsValid( RotorWash ) then
 		RotorWash:SetPos( self:GetRotorPos() )
 		RotorWash:SetAngles( Angle(0,0,0) )
@@ -474,10 +476,10 @@ end
 
 function ENT:StopEngine()
 	if not self:GetEngineActive() then return end
-	
+
 	self:SetEngineActive( false )
 	self:OnEngineStopped()
-	
+
 	if IsValid( self.RotorWashEnt ) then
 		self.RotorWashEnt:Remove()
 	end
