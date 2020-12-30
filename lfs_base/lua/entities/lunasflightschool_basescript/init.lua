@@ -27,7 +27,6 @@ function ENT:Initialize()
 	self:SetUseType( SIMPLE_USE )
 	self:SetRenderMode( RENDERMODE_TRANSALPHA )
 	self:AddFlags( FL_OBJECT ) -- this allows npcs to see this entity
-	self:SetCollisionGroup( COLLISION_GROUP_INTERACTIVE_DEBRIS ) -- No collision combined with limited fire range encourages proper plane combat instead of crashing into each other in a who-can-fly-the-slowest battle
 
 	local PObj = self:GetPhysicsObject()
 
@@ -48,7 +47,10 @@ function ENT:Initialize()
 	self:InitPod()
 	self:InitWheels()
 	self:RunOnSpawn()
+	self:AutoAI()
+end
 
+function ENT:AutoAI()
 	if IsValid( self.dOwnerEntLFS ) then
 		if self.dOwnerEntLFS:InVehicle() then
 			if self.dOwnerEntLFS:IsAdmin() then
@@ -1533,10 +1535,13 @@ function ENT:OnToggleAI( name, old, new)
 		
 		self:SetActive( true )
 		self:StartEngine()
+		self.COL_GROUP_OLD = self:GetCollisionGroup()
+		self:SetCollisionGroup( COLLISION_GROUP_INTERACTIVE_DEBRIS )
 		self:CreateAI()
 	else
 		self:SetActive( false )
 		self:StopEngine()
+		self:SetCollisionGroup( self.COL_GROUP_OLD or COLLISION_GROUP_NONE )
 		self:RemoveAI()
 	end
 end
