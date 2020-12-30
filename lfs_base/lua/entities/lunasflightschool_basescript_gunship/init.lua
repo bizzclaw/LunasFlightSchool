@@ -48,6 +48,14 @@ function ENT:Initialize()
 	
 	self.Inertia = self.LFSInertiaDefault
 	self:SetIsGroundTouching( true )
+
+	if IsValid( self.dOwnerEntLFS ) then
+		if self.dOwnerEntLFS:InVehicle() then
+			if self.dOwnerEntLFS:IsAdmin() then
+				self:SetAI( true )
+			end
+		end
+	end
 end
 
 function ENT:MainGunPoser( EyeAngles )
