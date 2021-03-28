@@ -337,16 +337,12 @@ function ENT:CalcFlight()
 	RudderFadeOut = math.max(RudderFadeOut,1 - RollRate)
 	
 	local ManualRoll = (D and MaxRoll or 0) - (A and MaxRoll or 0)
-	
-	if IsInVtolMode then
-		ManualRoll = math.Clamp(((D and 25 or 0) - (A and 25 or 0) - self:GetAngles().r) * 5, -MaxRoll, MaxRoll)
-	end
-	
 	local AutoRoll = (-LocalAngYaw * 22 * RollRate + LocalAngRoll * 3.5 * RudderFadeOut) * WingFinFadeOut
-	
+	local VtolRoll = math.Clamp(((D and 10 or 0) - (A and 10 or 0) - self:GetAngles().r) * 5, -MaxRoll, MaxRoll)
+
 	local P = math.Clamp(-LocalAngPitch * 25,-MaxPitch,MaxPitch)
 	local Y = math.Clamp(-LocalAngYaw * 160 * RudderFadeOut,-MaxYaw,MaxYaw)
-	local R = math.Clamp( (not A and not D) and AutoRoll or ManualRoll,-MaxRoll ,MaxRoll )
+	local R = math.Clamp( (not A and not D) and AutoRoll or (IsInVtolMode and VtolRoll or ManualRoll),-MaxRoll ,MaxRoll )
 	
 	local Pitch,Yaw,Roll,StabW,StabE,StabR = self:CalcFlightOverride( P, Y, R, Stability )
 	
@@ -361,7 +357,13 @@ function ENT:CalcFlight()
 	PhysObj:ApplyForceOffset( -self:GetRudderUp() * (math.Clamp(self:GetRudderVelocity(),-MaxYaw,MaxYaw) + Yaw * StabR) *  Mass * StabR, self:GetRudderPos() )
     
 	if self:IsSpaceShip() then
-		PhysObj:ApplyForceCenter( self:GetRight() * self:WorldToLocal( self:GetPos() + self:GetVelocity() ).y * Mass * 0.01 )
+		if IsInVtolMode then
+			PhysObj:ApplyForceCenter( self:GetRight() * (self:WorldToLocal( self:GetPos() + self:GetVelocity() ).y + ManualRoll) * Mass * 0.2 )
+		else
+			PhysObj:ApplyForceCenter( self:GetRight() * self:WorldToLocal( self:GetPos() + self:GetVelocity() ).y * Mass * 0.01 )
+		end
+	else
+		PhysObj:ApplyForceCenter( self:GetRight() * self:WorldToLocal( self:GetPos() + self:GetVelocity() ).y * Mass * 0.01 * Stability )
 	end
     
 	self:SetRotPitch( (Pitch / MaxPitch) * 30 )
@@ -507,14 +509,12 @@ function ENT:HandleEngine()
 
 			if IsValid( Driver ) then 
 				local IsVtolActive = self:IsVtolModeActive()
-				
+
 				if self.oldVtolMode ~= IsVtolActive then
 					self.oldVtolMode = IsVtolActive
 					self:OnVtolMode( IsVtolActive )
-					
-					self.smfForce = 0
 				end
-				
+
 				if IsVtolActive then
 					if isnumber( self.VtolAllowInputBelowThrottle ) then
 						local KeyThrottle = Driver:lfsGetInput( "+PITCH" )
@@ -562,8 +562,8 @@ function ENT:IsVtolModeActive()
 end
 
 function ENT:ApplyThrustVtol( PhysObj, vDirection, fForce )
-	PhysObj:ApplyForceOffset( vDirection * self.smfForce,  self:GetElevatorPos() )
-	PhysObj:ApplyForceOffset( vDirection * self.smfForce,  self:GetWingPos() )
+	PhysObj:ApplyForceOffset( vDirection * fForce,  self:GetElevatorPos() )
+	PhysObj:ApplyForceOffset( vDirection * fForce,  self:GetWingPos() )
 end
 
 function ENT:ApplyThrust( PhysObj, vDirection, fForce )
@@ -979,11 +979,19 @@ end
 
 function ENT:GetStability()
 	local Stability = math.abs( math.Clamp( self:GetForwardVelocity() / self:GetMaxPerfVelocity(),-self:GetMaxStability(),self:GetMaxStability() ) )
-	
+
 	if self:IsSpaceShip() then
-		Stability = self:IsDestroyed() and 0.1 or (self:GetEngineActive() and self.Stability or 0)
+		local TargetStability = self:IsDestroyed() and 0.1 or (self:GetEngineActive() and self.Stability or 0)
+
+		self.smStablty = self.smStablty and self.smStablty + (TargetStability - self.smStablty) * FrameTime() or 0
+
+		if TargetStability <= 0 then
+			self.smStablty = 0
+		end
+
+		Stability = self.smStablty
 	end
-	
+
 	return self:InWater() and 0 or Stability
 end
 
@@ -1497,12 +1505,14 @@ function ENT:PhysicsCollide( data, physobj )
 			return
 		end
 	end
-	
+
 	if data.Speed > 60 and data.DeltaTime > 0.2 then
-		if data.Speed > 500 then
+		local VelDif = data.OurOldVelocity:Length() - data.OurNewVelocity:Length()
+
+		if VelDif > 500 then
 			self:EmitSound( "Airboat_impact_hard" )
-			
-			self:TakeDamage( 400, data.HitEntity, data.HitEntity )
+
+			self:TakeDamage( VelDif, data.HitEntity, data.HitEntity )
 		else
 			self:EmitSound( "MetalVehicle.ImpactSoft" )
 		end
