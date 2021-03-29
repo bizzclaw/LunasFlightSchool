@@ -355,17 +355,19 @@ function ENT:CalcFlight()
 	PhysObj:ApplyForceOffset( -self:GetElevatorUp() * (self:GetElevatorVelocity() + Pitch * StabE) * Mass * StabE, self:GetElevatorPos() )
 	
 	PhysObj:ApplyForceOffset( -self:GetRudderUp() * (math.Clamp(self:GetRudderVelocity(),-MaxYaw,MaxYaw) + Yaw * StabR) *  Mass * StabR, self:GetRudderPos() )
-    
+
 	if self:IsSpaceShip() then
-		if IsInVtolMode then
-			PhysObj:ApplyForceCenter( self:GetRight() * (self:WorldToLocal( self:GetPos() + self:GetVelocity() ).y + ManualRoll) * Mass * 0.2 )
-		else
-			PhysObj:ApplyForceCenter( self:GetRight() * self:WorldToLocal( self:GetPos() + self:GetVelocity() ).y * Mass * 0.01 )
+		if self:GetEngineActive() then
+			if IsInVtolMode then
+				PhysObj:ApplyForceCenter( self:GetRight() * (self:WorldToLocal( self:GetPos() + self:GetVelocity() ).y + ManualRoll) * Mass * 0.2 )
+			else
+				PhysObj:ApplyForceCenter( self:GetRight() * self:WorldToLocal( self:GetPos() + self:GetVelocity() ).y * Mass * 0.01 )
+			end
 		end
 	else
 		PhysObj:ApplyForceCenter( self:GetRight() * self:WorldToLocal( self:GetPos() + self:GetVelocity() ).y * Mass * 0.01 * Stability )
 	end
-    
+
 	self:SetRotPitch( (Pitch / MaxPitch) * 30 )
 	self:SetRotYaw( (Yaw / MaxYaw) * 30 )
 	self:SetRotRoll( (Roll / MaxRoll) * 30 )
