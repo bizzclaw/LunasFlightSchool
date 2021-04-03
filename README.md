@@ -2,7 +2,8 @@
 lua scripted planes for gmod
 
 # Installation
-Put the folders called "lfs_base" and "lfs_base_content" into ?:\...\Steam\steamapps\common\GarrysMod\garrysmod\addons
+extract the content into a new folder into ?:\...\Steam\steamapps\common\GarrysMod\garrysmod\addons
+or, use git to clone the repository directly into your addons folder.
 Vehicles can then be found in your Entities tab under [LFS]. An special Missile launcher can be found in your Weapons tab under "Other"
 
 # Credits

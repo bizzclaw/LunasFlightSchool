@@ -83,89 +83,6 @@ end
 
 simfphys.LFS.NotificationVoices = {["RANDOM"] = "0",["LFSORIGINAL"] = "1",["Charles"] = "2",["Grace"] = "3",["Darren"] = "4",["Susan"] = "5",["Graham"] = "6",["Peter"] = "7",["Rachel"] = "8",["Gabriel"] = "9",["Gabriella"] = "10",["Rod"] = "11",["Mike"] = "12",["Sharon"] = "13",["Tim"] = "14",["Ryan"] = "15",["Tracy"] = "16",["Amanda"] = "17",["Selene"] = "18",["Audrey"] = "19"}
 
-function simfphys.LFS.CheckUpdates()
-	--http.Fetch("https://github.com/Blu-x92/LunasFlightSchool", function(contents,size) 
-	--local LatestVersion = tonumber( string.match( contents, "%s*(%d+)\n%s*</span>\n%s*commits" ) ) or 0  -- RIP OLD METHOD
-
-	http.Fetch("https://raw.githubusercontent.com/Blu-x92/LunasFlightSchool/master/lfs_base/lua/autorun/lfs_basescript.lua", function(contents,size) 
-		local LatestVersion = tonumber( string.match( string.match( contents, "simfphys.LFS.VERSION%s=%s%d+" ) , "%d+" ) ) or 0
-
-		if LatestVersion == 0 then
-			print("[LFS] latest version could not be detected, You have Version: "..simfphys.LFS.GetVersion())
-		else
-			if simfphys.LFS.GetVersion() >= LatestVersion then
-				print("[LFS] is up to date, Version: "..simfphys.LFS.GetVersion())
-			else
-				print("[LFS] a newer version is available! Version: "..LatestVersion..", You have Version: "..simfphys.LFS.GetVersion())
-				print("[LFS] get the latest version at https://github.com/Blu-x92/LunasFlightSchool")
-				
-				if CLIENT then 
-					timer.Simple(18, function() 
-						chat.AddText( Color( 255, 0, 0 ), "[LFS] a newer version is available!" )
-						surface.PlaySound( "lfs/notification/ding.ogg" )
-						timer.Simple(3, function() 
-							simfphys.LFS.PlayNotificationSound()
-						end )
-					end)
-				end
-			end
-		end
-	end)
-
-	if SERVER then return end
-
-	if not LFS_1878568737 then
-		if file.Exists( "lfs_dontnotifyme.txt", "DATA" ) then return end
-
-		local bgMat = Material( "lfs_controlpanel_bg.png" )
-
-		local InfoFrame = vgui.Create( "DFrame" )
-		InfoFrame:SetSize( 345, 120 )
-		InfoFrame:SetTitle( "" )
-		InfoFrame:SetDraggable( true )
-		InfoFrame:MakePopup()
-		InfoFrame:Center()
-		InfoFrame.Paint = function(self, w, h )
-			draw.RoundedBox( 8, 0, 0, w, h, Color( 0, 0, 0, 255 ) )
-			draw.RoundedBox( 8, 1, 46, w-2, h-47, Color( 120, 120, 120, 255 ) )
-
-			draw.RoundedBox( 4, 1, 26, w-2, 36, Color( 120, 120, 120, 255 ) )
-			
-			draw.RoundedBox( 8, 0, 0, w, 25, Color( 127, 0, 0, 255 ) )
-			draw.SimpleText( "[LFS] - Notification", "LFS_FONT", 5, 11, Color(255,255,255,255), TEXT_ALIGN_LEFT, TEXT_ALIGN_CENTER )
-			
-			surface.SetDrawColor( 255, 255, 255, 50 )
-			surface.SetMaterial( bgMat )
-			surface.DrawTexturedRect( 0, -50, w, w )
-
-			draw.DrawText( "Due to ongoing complaints about filesize,", "LFS_FONT_PANEL", 10, 30, Color( 255, 170, 170, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-			draw.DrawText( "STAR WARS vehicles are NO LONGER PART OF THE BASE ADDON!", "LFS_FONT_PANEL", 10, 45, Color( 255, 170, 170, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-			draw.DrawText( "If you still want to use them", "LFS_FONT_PANEL", 10, 67, Color( 255, 170, 170, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-		end
-
-		local DermaButton = vgui.Create( "DButton", InfoFrame )
-		DermaButton:SetText( "" )
-		DermaButton:SetPos( 150, 63 )
-		DermaButton:SetSize( 150, 20 )
-		DermaButton.DoClick = function() steamworks.ViewFile( "1878568737" ) end
-		DermaButton.Paint = function(self, w, h ) 
-			draw.DrawText( "CLICK HERE", "LFS_FONT", 0, 0, Color( 255, 255, 255, 255 ), TEXT_ALIGN_LEFT, TEXT_ALIGN_TOP )
-		end
-
-		local CheckBox = vgui.Create( "DCheckBoxLabel", InfoFrame )
-		CheckBox:SetText( "OK, don't show me this message ever again." )
-		CheckBox:SizeToContents()
-		CheckBox:SetPos( 10, 95 )
-		CheckBox.OnChange = function(self, bVal)
-			if bVal then
-				surface.PlaySound( "buttons/button14.wav" )
-				InfoFrame:Close()
-				file.Write( "lfs_dontnotifyme.txt", "[LFS] - Star Wars Pack Notification suppressing file." )
-			end
-		end
-	end
-end
-
 function simfphys.LFS.GetVersion()
 	return simfphys.LFS.VERSION
 end
@@ -1818,10 +1735,6 @@ end)
 cvars.AddChangeCallback( "lfs_bullet_max_range", function( convar, oldValue, newValue ) 
 	simfphys.LFS.MaxBulletDistance = tonumber( newValue )
 end)
-
-hook.Add( "InitPostEntity", "!!!lfscheckupdates", function()
-	timer.Simple(20, function() simfphys.LFS.CheckUpdates() end)
-end )
 
 hook.Add( "CanProperty", "!!!!lfsEditPropertiesDisabler", function( ply, property, ent )
 	if ent.LFS and not ply:IsAdmin() and property == "editentity" then return false end
